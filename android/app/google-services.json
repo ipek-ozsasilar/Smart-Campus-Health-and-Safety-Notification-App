@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "353447228910",
+    "project_id": "smart-campus-health-and-safety",
+    "storage_bucket": "smart-campus-health-and-safety.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:353447228910:android:d3ef7d02fd07e40174caff",
+        "android_client_info": {
+          "package_name": "com.example.mobil_proje"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB1_wRlVOlSKdxn83tNd45Vw0vXFZCwKrk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
