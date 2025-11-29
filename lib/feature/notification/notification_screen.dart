@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mobil_proje/feature/login/login_screen.dart';
+import 'package:flutter_mindmate_project/feature/login/login_screen.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -16,6 +16,7 @@ class NotificationScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text('Notification'),
+          SizedBox(height: 20),
           TextButton(onPressed: () {
             Navigator.push(context, MaterialPageRoute(builder: (context) {
               var loginScreen = LoginScreen();
