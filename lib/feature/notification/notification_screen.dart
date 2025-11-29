@@ -17,8 +17,12 @@ class NotificationScreen extends StatelessWidget {
         children: [
           Text('Notification'),
           TextButton(onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
-          }, child: Text('Geri Dön'))
+            Navigator.push(context, MaterialPageRoute(builder: (context) {
+              var loginScreen = LoginScreen();
+              return loginScreen;
+            }));
+          }, child: Text('Geri Dön')),
+             Text("data") 
         ],
       ),
     );
