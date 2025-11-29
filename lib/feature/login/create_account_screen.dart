@@ -1,79 +1,39 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_mindmate_project/feature/notification/notification_screen.dart';
-
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: Text('appbar'),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text('Login'),
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-            
-            Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationScreen()));
-          }, child: Text('Notification'))
-        ],
-      ),
-    );
-  }
-}
-
 /*
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_mindmate_project/feature/login/view_model/create_account_view_model.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-class LogInView extends ConsumerStatefulWidget {
-  const LogInView({super.key});
+class CreateAccountView extends ConsumerStatefulWidget {
+  const CreateAccountView({super.key});
 
   @override
-  ConsumerState<LogInView> createState() => _LogInViewState();
+  ConsumerState<CreateAccountView> createState() => _CreateAccountViewState();
 }
 
-class _LogInViewState extends LoginViewModel {
+class _CreateAccountViewState extends CreateAccountViewModel {
   final Alignment alignment = Alignment.centerRight;
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   @override
   Widget build(BuildContext context) {
-    // Listener'ı build içinde kur (SADECE BURADA ÇAĞRILMALI)
     setupListeners();
-
     return Scaffold(
       //Login appbar
       appBar: LogInAppbar(),
       body: SingleChildScrollView(
-        child: Padding(
-          padding: Paddings.paddingInstance.generalHorizontalPadding,
-          child: Form(
-            key: _formKey,
+        child: Form(
+          key: formKey,
+          child: Padding(
+            padding: Paddings.paddingInstance.generalHorizontalPadding,
             child: ListView(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                //welcome back title
                 GeneralTextWidget(
                   color: ColorName.whiteColor,
                   size: TextSizesEnum.googleSize.value,
-                  text: StringsEnum.welcomeBack.value,
+                  text: StringsEnum.createYourAccount.value,
                 ),
                 //email address text
                 Padding(
@@ -107,8 +67,6 @@ class _LogInViewState extends LoginViewModel {
                     text: StringsEnum.password.value,
                   ),
                 ),
-
-                //password input
                 InputWidget(
                   controller: readPasswordController(),
                   hintText: StringsEnum.password.value,
@@ -125,21 +83,32 @@ class _LogInViewState extends LoginViewModel {
                   obscureText: watchPasswordObscure(),
                   onSuffixIconPressed: togglePasswordVisibility,
                 ),
+                //password input
                 //forgot password text button
                 Padding(
                   padding:
                       Paddings.paddingInstance.loginForgotPasswordTopPadding,
-                  child: Align(
-                    alignment: alignment,
-                    child: GlobalTextButton(
-                      text: StringsEnum.forgotPassword.value,
-                      textColor: ColorName.loginGreyTextColor,
-                      onPressed: () {
-                        context.navigateTo(const ForgotPasswordView());
-                        //Başka bir sayfaya geçildiğinde email ve password'u temizle
-                        clearEmailAndPassword();
-                      },
-                    ),
+                  child: TextAndSignUpLogInRowWidget(
+                    firstText: StringsEnum.privacyPolicyFirstPart.value,
+                    secondText: StringsEnum.privacyPolicySecondPart.value,
+                    wrapAlignment: WrapAlignment.start,
+                    onPressed: () async {
+                      try {
+                        final url = Uri.parse(
+                          StringsEnum.privacyPolicyUrl.value,
+                        );
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        } else {
+                          showSnackBar(ErrorStringsEnum.urlLaunchError.value);
+                        }
+                      } catch (e) {
+                        showSnackBar(ErrorStringsEnum.urlLaunchError.value);
+                      }
+                    },
                   ),
                 ),
 
@@ -147,13 +116,11 @@ class _LogInViewState extends LoginViewModel {
                   padding: Paddings.paddingInstance.splashButtonVerticalPadding,
                   child: GlobalElevatedButton(
                     onPressed: () async {
-                      // Form validate et
-                      if (_formKey.currentState?.validate() ?? false) {
-                        // Login işlemini başlat ve başarılıysa başka bir sayfaya geç
-                        await loginUser();
+                      if (formKey.currentState?.validate() ?? false) {
+                        await createAccount();
                       }
                     },
-                    text: StringsEnum.logIn.value,
+                    text: StringsEnum.createAccount.value,
                     loading: loadingWatch(),
                   ),
                 ),
@@ -166,18 +133,17 @@ class _LogInViewState extends LoginViewModel {
                       .loginTextAndSignUpVerticalPadding,
                   child: GlobalOutlinedIconButton(
                     onPressed: () async {
-                      await googleLogin();
+                      await googleCreateAccount();
                     },
                   ),
                 ),
 
                 TextAndSignUpLogInRowWidget(
-                  firstText: StringsEnum.dontHaveAnAccount.value,
-                  secondText: StringsEnum.signUp.value,
+                  firstText: StringsEnum.alreadyHaveAnAccount.value,
+                  secondText: StringsEnum.logIn.value,
                   onPressed: () {
-                    context.navigateTo(const CreateAccountView());
-                    //Başka bir sayfaya geçildiğinde email ve password'u temizle
-                    clearEmailAndPassword();
+                    context.navigateTo(const LogInView());
+                    clearFullNameAndEmailAndPassword();
                   },
                 ),
               ],
