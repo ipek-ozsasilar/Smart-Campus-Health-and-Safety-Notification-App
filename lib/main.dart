@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
       home: const LoginScreen(),
       //commit
       //test
+      //bu bir testtir
     );
   }
 }
