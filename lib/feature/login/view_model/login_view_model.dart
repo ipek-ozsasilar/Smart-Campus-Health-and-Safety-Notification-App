@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobil_proje/feature/login/login_screen.dart';
 import 'package:mobil_proje/feature/login/provider/log_in_provider.dart';
 import 'package:mobil_proje/product/enum/error_strings.dart';
 import 'package:mobil_proje/product/mixin/scaffold_message.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+  
 abstract class LoginViewModel extends ConsumerState<LogInView>
     with ScaffoldMessage<LogInView> {
   // Build içinde çağrılır - state değişikliklerini dinler

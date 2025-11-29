@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:mobil_proje/feature/login/login_screen.dart';
-
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({Key? key}) : super(key: key);
 
