@@ -69,11 +69,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                   hintText: 'demo@gmail.com',
                   prefixIcon: IconConstants.iconConstants.emailIcon,
                   keyboardType: TextInputType.emailAddress,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      Validators.validatorsInstance.emailRegex,
-                    ),
-                  ],
                   validator: Validators.validatorsInstance.validateEmail,
                 ),
                 // Send button
@@ -85,7 +80,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                         // TODO: Implement password reset
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Password reset link sent to your email'),
+                            content: Text(
+                              'Password reset link sent to your email',
+                            ),
                           ),
                         );
                       }
@@ -102,4 +99,3 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     );
   }
 }
-

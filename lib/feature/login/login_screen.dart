@@ -74,11 +74,6 @@ class _LogInViewState extends LoginViewModel {
                   hintText: StringsEnum.demoEmail.value,
                   prefixIcon: IconConstants.iconConstants.emailIcon,
                   keyboardType: TextInputType.emailAddress,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      Validators.validatorsInstance.emailRegex,
-                    ),
-                  ],
                   validator: Validators.validatorsInstance.validateEmail,
                 ),
                 //password text

@@ -88,11 +88,6 @@ class _CreateAccountViewState extends CreateAccountViewModel {
                   hintText: StringsEnum.demoEmail.value,
                   prefixIcon: IconConstants.iconConstants.emailIcon,
                   keyboardType: TextInputType.emailAddress,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      Validators.validatorsInstance.emailRegex,
-                    ),
-                  ],
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'email is empty';
