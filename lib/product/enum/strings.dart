@@ -12,9 +12,8 @@ enum StringsEnum {
   alreadyHaveAnAccount('Zaten hesabınız var mı?'),
   privacyPolicyFirstPart('Devam ederek'),
   privacyPolicySecondPart('Gizlilik Politikası'),
-  privacyPolicyUrl('https://example.com/privacy');
+  privacyPolicyUrl('https://policies.google.com/privacy?hl=en-US');
 
   final String value;
   const StringsEnum(this.value);
 }
-

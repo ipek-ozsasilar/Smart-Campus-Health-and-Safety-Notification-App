@@ -17,7 +17,6 @@ import 'package:mobil_proje/product/enum/strings.dart';
 import 'package:mobil_proje/product/constant/icons.dart';
 import 'package:mobil_proje/product/constant/validators.dart';
 import 'package:mobil_proje/product/mixin/navigation_mixin.dart';
-import 'package:mobil_proje/product/enum/error_strings.dart';
 import 'package:mobil_proje/feature/login/login_screen.dart';
 import 'package:flutter/gestures.dart';
 
@@ -163,14 +162,23 @@ class _CreateAccountViewState extends CreateAccountViewModel {
                                     mode: LaunchMode.externalApplication,
                                   );
                                 } else {
-                                  showSnackBar(
-                                    ErrorStringsEnum.urlLaunchError.value,
+                                  // Fallback: try to open in browser
+                                  await launchUrl(
+                                    url,
+                                    mode: LaunchMode.platformDefault,
                                   );
                                 }
                               } catch (e) {
-                                showSnackBar(
-                                  ErrorStringsEnum.urlLaunchError.value,
-                                );
+                                // If URL launch fails, show error
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'URL açılamadı: ${e.toString()}',
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
                             },
                         ),
