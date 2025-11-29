@@ -22,8 +22,7 @@ class NotificationScreen extends StatelessWidget {
               return loginScreen;
             }));
           }, child: Text('Geri Dön')),
-             Text("data")
-          
+             Text("data") 
         ],
       ),
     );
