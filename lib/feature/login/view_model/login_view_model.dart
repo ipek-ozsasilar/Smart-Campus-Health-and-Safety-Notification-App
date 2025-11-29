@@ -1,12 +1,8 @@
-/*
-
 import 'package:flutter/material.dart';
-import 'package:flutter_mindmate_project/features/create_chat/create_chat_view.dart';
-import 'package:flutter_mindmate_project/features/login/log_in_view.dart';
-import 'package:flutter_mindmate_project/features/login/provider/login_provider.dart';
-import 'package:flutter_mindmate_project/products/enums/error_strings.dart';
-import 'package:flutter_mindmate_project/products/mixins/navigation_mixin.dart';
-import 'package:flutter_mindmate_project/products/mixins/scaffold_message.dart';
+import 'package:mobil_proje/feature/login/login_screen.dart';
+import 'package:mobil_proje/feature/login/provider/log_in_provider.dart';
+import 'package:mobil_proje/product/enum/error_strings.dart';
+import 'package:mobil_proje/product/mixin/scaffold_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 abstract class LoginViewModel extends ConsumerState<LogInView>
@@ -17,8 +13,8 @@ abstract class LoginViewModel extends ConsumerState<LogInView>
       // Loading bitti, sonucu kontrol et
       if (previous != null && previous.isLoading && !next.isLoading) {
         if (next.errorMessage == ErrorStringsEnum.loginSuccess.value) {
-          // Login başarılı, home'a git
-          context.navigateTo(const CreateChatView());
+          // Login başarılı, home'a git - TODO: CreateChatView eklenmeli
+          // context.navigateTo(const CreateChatView());
           //email ve password'u temizle
           clearEmailAndPassword();
         } else if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
@@ -86,7 +82,8 @@ abstract class LoginViewModel extends ConsumerState<LogInView>
   Future<void> googleLogin() async {
     final result = await ref.read(loginProvider.notifier).GoogleLogin();
     if (result) {
-      context.navigateTo(const CreateChatView());
+      // TODO: CreateChatView eklenmeli
+      // context.navigateTo(const CreateChatView());
       clearEmailAndPassword();
     } else {
       showSnackBar(ErrorStringsEnum.loginFailed.value);
@@ -97,8 +94,8 @@ abstract class LoginViewModel extends ConsumerState<LogInView>
   void clearEmailAndPassword() {
     ref.read(loginProvider.notifier).clearEmailAndPassword();
   }
+
   TextEditingController? readEmailController() {
     return ref.read(loginProvider.notifier).emailController;
   }
 }
- */

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mindmate_project/feature/login/login_screen.dart';
+import 'package:mobil_proje/feature/login/login_screen.dart';
 
 class NotificationScreen extends StatelessWidget {
   const NotificationScreen({Key? key}) : super(key: key);
@@ -7,23 +7,27 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: Text('appbar'),
-      ),
+      appBar: AppBar(backgroundColor: Colors.blue, title: Text('appbar')),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text('Notification'),
-          SizedBox(height: 20),
-          TextButton(onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              var loginScreen = LoginScreen();
-              return loginScreen;
-            }));
-          }, child: Text('Geri Dön')),
-             Text("data") 
+          const Text('Notification'),
+          const SizedBox(height: 20),
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) {
+                    return const LogInView();
+                  },
+                ),
+              );
+            },
+            child: const Text('Geri Dön'),
+          ),
+          const Text("data"),
         ],
       ),
     );

@@ -1,40 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mindmate_project/feature/notification/notification_screen.dart';
-
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: Text('appbar'),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text('Login'),
-          TextButton(
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-            
-            Navigator.push(context, MaterialPageRoute(builder: (context) => NotificationScreen()));
-          }, child: Text('Notification'))
-        ],
-      ),
-    );
-  }
-}
-
-/*
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobil_proje/feature/login/view_model/login_view_model.dart';
+import 'package:mobil_proje/product/widget/general_text_widget.dart';
+import 'package:mobil_proje/product/widget/input_widget.dart';
+import 'package:mobil_proje/product/widget/global_elevated_button.dart';
+import 'package:mobil_proje/product/widget/global_text_button.dart';
+import 'package:mobil_proje/product/widget/global_outlined_icon_button.dart';
+import 'package:mobil_proje/product/widget/or_continue_with_row.dart';
+import 'package:mobil_proje/product/widget/text_and_sign_up_log_in_row_widget.dart';
+import 'package:mobil_proje/product/widget/log_in_appbar.dart';
+import 'package:mobil_proje/product/constant/paddings.dart';
+import 'package:mobil_proje/product/constant/colors.dart';
+import 'package:mobil_proje/product/enum/text_sizes.dart';
+import 'package:mobil_proje/product/enum/strings.dart';
+import 'package:mobil_proje/product/constant/icons.dart';
+import 'package:mobil_proje/product/constant/validators.dart';
+import 'package:mobil_proje/product/mixin/navigation_mixin.dart';
+import 'package:mobil_proje/feature/login/create_account_screen.dart';
+import 'package:mobil_proje/feature/login/forgot_password_screen.dart';
 
 class LogInView extends ConsumerStatefulWidget {
   const LogInView({super.key});
@@ -188,4 +172,3 @@ class _LogInViewState extends LoginViewModel {
     );
   }
 }
- */

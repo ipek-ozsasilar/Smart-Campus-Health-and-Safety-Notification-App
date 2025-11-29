@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mindmate_project/feature/login/login_screen.dart';
+import 'package:mobil_proje/feature/login/login_screen.dart';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -12,15 +14,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo test',
+      debugShowCheckedModeBanner: false,
+      title: 'MindMate',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF1A1A2E),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFFFD700), // Golden yellow
+          surface: Color(0xFF1A1A2E),
+          background: Color(0xFF1A1A2E),
+        ),
       ),
-      home: const LoginScreen(),
-      //commit
-      //test
-      //bu bir testtir
-      //deneme
+      home: const LogInView(),
     );
   }
 }

@@ -1,9 +1,25 @@
-/*
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_mindmate_project/feature/login/view_model/create_account_view_model.dart';
-import 'package:flutter_riverpod/legacy.dart';
+import 'package:mobil_proje/feature/login/view_model/create_account_view_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mobil_proje/product/widget/general_text_widget.dart';
+import 'package:mobil_proje/product/widget/input_widget.dart';
+import 'package:mobil_proje/product/widget/global_elevated_button.dart';
+import 'package:mobil_proje/product/widget/global_outlined_icon_button.dart';
+import 'package:mobil_proje/product/widget/or_continue_with_row.dart';
+import 'package:mobil_proje/product/widget/text_and_sign_up_log_in_row_widget.dart';
+import 'package:mobil_proje/product/widget/log_in_appbar.dart';
+import 'package:mobil_proje/product/constant/paddings.dart';
+import 'package:mobil_proje/product/constant/colors.dart';
+import 'package:mobil_proje/product/enum/text_sizes.dart';
+import 'package:mobil_proje/product/enum/strings.dart';
+import 'package:mobil_proje/product/constant/icons.dart';
+import 'package:mobil_proje/product/constant/validators.dart';
+import 'package:mobil_proje/product/mixin/navigation_mixin.dart';
+import 'package:mobil_proje/product/enum/error_strings.dart';
+import 'package:mobil_proje/feature/login/login_screen.dart';
+import 'package:flutter/gestures.dart';
 
 class CreateAccountView extends ConsumerStatefulWidget {
   const CreateAccountView({super.key});
@@ -35,6 +51,28 @@ class _CreateAccountViewState extends CreateAccountViewModel {
                   size: TextSizesEnum.googleSize.value,
                   text: StringsEnum.createYourAccount.value,
                 ),
+                //full name text
+                Padding(
+                  padding: Paddings.paddingInstance.loginVerticalPadding,
+                  child: GeneralTextWidget(
+                    color: ColorName.loginGreyTextColor,
+                    size: TextSizesEnum.generalSize.value,
+                    text: 'Full Name',
+                  ),
+                ),
+                //full name input
+                InputWidget(
+                  controller: readFullNameController(),
+                  hintText: 'Full Name',
+                  prefixIcon: IconConstants.iconConstants.personIcon,
+                  keyboardType: TextInputType.name,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'full name is empty';
+                    }
+                    return null;
+                  },
+                ),
                 //email address text
                 Padding(
                   padding: Paddings.paddingInstance.loginVerticalPadding,
@@ -55,7 +93,17 @@ class _CreateAccountViewState extends CreateAccountViewModel {
                       Validators.validatorsInstance.emailRegex,
                     ),
                   ],
-                  validator: Validators.validatorsInstance.validateEmail,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'email is empty';
+                    }
+                    if (!Validators.validatorsInstance.emailRegex.hasMatch(
+                      value,
+                    )) {
+                      return 'invalid email';
+                    }
+                    return null;
+                  },
                 ),
                 //password text
                 Padding(
@@ -79,36 +127,60 @@ class _CreateAccountViewState extends CreateAccountViewModel {
                       Validators.validatorsInstance.passwordLength,
                     ), // Max 6 karakter
                   ],
-                  validator: Validators.validatorsInstance.validatePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'password is empty';
+                    }
+                    if (value.length <
+                        Validators.validatorsInstance.passwordLength) {
+                      return 'password too short';
+                    }
+                    return null;
+                  },
                   obscureText: watchPasswordObscure(),
                   onSuffixIconPressed: togglePasswordVisibility,
                 ),
                 //password input
-                //forgot password text button
+                //privacy policy text
                 Padding(
                   padding:
                       Paddings.paddingInstance.loginForgotPasswordTopPadding,
-                  child: TextAndSignUpLogInRowWidget(
-                    firstText: StringsEnum.privacyPolicyFirstPart.value,
-                    secondText: StringsEnum.privacyPolicySecondPart.value,
-                    wrapAlignment: WrapAlignment.start,
-                    onPressed: () async {
-                      try {
-                        final url = Uri.parse(
-                          StringsEnum.privacyPolicyUrl.value,
-                        );
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        } else {
-                          showSnackBar(ErrorStringsEnum.urlLaunchError.value);
-                        }
-                      } catch (e) {
-                        showSnackBar(ErrorStringsEnum.urlLaunchError.value);
-                      }
-                    },
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      children: [
+                        const TextSpan(text: 'I have read & agreed to '),
+                        TextSpan(
+                          text: 'Mindmate Privacy Policy, Terms & Condition',
+                          style: const TextStyle(
+                            color: Color(0xFFFFD700),
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () async {
+                              try {
+                                final url = Uri.parse(
+                                  StringsEnum.privacyPolicyUrl.value,
+                                );
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(
+                                    url,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                } else {
+                                  showSnackBar(
+                                    ErrorStringsEnum.urlLaunchError.value,
+                                  );
+                                }
+                              } catch (e) {
+                                showSnackBar(
+                                  ErrorStringsEnum.urlLaunchError.value,
+                                );
+                              }
+                            },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -154,4 +226,3 @@ class _CreateAccountViewState extends CreateAccountViewModel {
     );
   }
 }
- */

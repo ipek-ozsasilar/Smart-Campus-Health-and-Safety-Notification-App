@@ -1,6 +1,9 @@
-/*
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobil_proje/feature/login/create_account_screen.dart';
+import 'package:mobil_proje/feature/login/provider/create_account_provider.dart';
+import 'package:mobil_proje/product/enum/error_strings.dart';
+import 'package:mobil_proje/product/mixin/scaffold_message.dart';
 
 abstract class CreateAccountViewModel extends ConsumerState<CreateAccountView>
     with ScaffoldMessage<CreateAccountView> {
@@ -11,8 +14,8 @@ abstract class CreateAccountViewModel extends ConsumerState<CreateAccountView>
       if (previous != null && previous.isLoading && !next.isLoading) {
         if (next.errorMessage == ErrorStringsEnum.loginSuccess.value ||
             next.errorMessage == ErrorStringsEnum.createAccountSuccess.value) {
-          // Login/Create Account başarılı, home'a git
-          context.navigateTo(const CreateChatView());
+          // Login/Create Account başarılı, home'a git - TODO: CreateChatView eklenmeli
+          // context.navigateTo(const CreateChatView());
           //email ve password'u temizle
           clearFullNameAndEmailAndPassword();
         } else if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
@@ -51,7 +54,8 @@ abstract class CreateAccountViewModel extends ConsumerState<CreateAccountView>
         .read(createAccountProvider.notifier)
         .emailAndPasswordCreateAccount();
     if (result) {
-      context.navigateTo(const CreateChatView());
+      // TODO: CreateChatView eklenmeli
+      // context.navigateTo(const CreateChatView());
       clearFullNameAndEmailAndPassword();
       return true;
     } else {
@@ -92,7 +96,8 @@ abstract class CreateAccountViewModel extends ConsumerState<CreateAccountView>
         .read(createAccountProvider.notifier)
         .GoogleCreateAccount();
     if (result) {
-      context.navigateTo(const CreateChatView());
+      // TODO: CreateChatView eklenmeli
+      // context.navigateTo(const CreateChatView());
       clearFullNameAndEmailAndPassword();
     }
     // Hata mesajı zaten provider'da set ediliyor, setupListeners gösterecek
@@ -110,4 +115,3 @@ abstract class CreateAccountViewModel extends ConsumerState<CreateAccountView>
     return ref.read(createAccountProvider.notifier).fullNameController;
   }
 }
- */

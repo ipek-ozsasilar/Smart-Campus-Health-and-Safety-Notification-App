@@ -1,10 +1,10 @@
-/*
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mobil_proje/product/enum/error_strings.dart';
 
 var loginProvider = StateNotifierProvider<LoginProvider, LoginState>(
   (ref) => LoginProvider(),
@@ -222,4 +222,3 @@ class LoginState extends Equatable {
     );
   }
 }
- */
