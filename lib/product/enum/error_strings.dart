@@ -13,7 +13,9 @@ enum ErrorStringsEnum {
   unexpectedError('Beklenmeyen hata'),
   invalidCredentialError('Geçersiz kimlik bilgileri'),
   googleLoginCanceled('Google girişi iptal edildi'),
-  urlLaunchError('URL açılamadı');
+  urlLaunchError('URL açılamadı'),
+  passwordResetEmailSent('Şifre sıfırlama linki email adresinize gönderildi'),
+  userNotFoundError('Bu email adresi ile kayıtlı kullanıcı bulunamadı');
 
   final String value;
   const ErrorStringsEnum(this.value);

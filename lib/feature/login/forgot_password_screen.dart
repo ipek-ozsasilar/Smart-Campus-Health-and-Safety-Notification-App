@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobil_proje/product/widget/log_in_appbar.dart';
 import 'package:mobil_proje/product/widget/general_text_widget.dart';
 import 'package:mobil_proje/product/widget/input_widget.dart';
@@ -9,17 +10,20 @@ import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/enum/text_sizes.dart';
 import 'package:mobil_proje/product/constant/icons.dart';
 import 'package:mobil_proje/product/constant/validators.dart';
+import 'package:mobil_proje/feature/login/provider/log_in_provider.dart';
+import 'package:mobil_proje/product/enum/error_strings.dart';
 
-class ForgotPasswordView extends StatefulWidget {
+class ForgotPasswordView extends ConsumerStatefulWidget {
   const ForgotPasswordView({super.key});
 
   @override
-  State<ForgotPasswordView> createState() => _ForgotPasswordViewState();
+  ConsumerState<ForgotPasswordView> createState() => _ForgotPasswordViewState();
 }
 
-class _ForgotPasswordViewState extends State<ForgotPasswordView> {
+class _ForgotPasswordViewState extends ConsumerState<ForgotPasswordView> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -75,20 +79,73 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                 Padding(
                   padding: Paddings.paddingInstance.splashButtonVerticalPadding,
                   child: GlobalElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        // TODO: Implement password reset
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Password reset link sent to your email',
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    text: 'Send',
-                    loading: false,
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            if (_formKey.currentState?.validate() ?? false) {
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              // İnternet bağlantısı kontrolü
+                              final isConnected = await ref
+                                  .read(loginProvider.notifier)
+                                  .checkInternetConnection();
+                              if (!isConnected) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        ErrorStringsEnum
+                                            .internetConnectionError
+                                            .value,
+                                      ),
+                                      backgroundColor: ColorName.errorRed,
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
+
+                              // Şifre sıfırlama emaili gönder
+                              final email = _emailController.text.trim();
+                              final success = await ref
+                                  .read(loginProvider.notifier)
+                                  .sendPasswordResetEmail(email);
+
+                              setState(() {
+                                _isLoading = false;
+                              });
+
+                              if (mounted) {
+                                final errorMsg = ref
+                                    .read(loginProvider)
+                                    .errorMessage;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      errorMsg ??
+                                          (success
+                                              ? ErrorStringsEnum
+                                                    .passwordResetEmailSent
+                                                    .value
+                                              : ErrorStringsEnum
+                                                    .unexpectedError
+                                                    .value),
+                                    ),
+                                    backgroundColor: success
+                                        ? Colors.green
+                                        : ColorName.errorRed,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    text: 'Gönder',
+                    loading: _isLoading,
                   ),
                 ),
               ],

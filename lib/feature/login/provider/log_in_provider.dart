@@ -176,6 +176,32 @@ class LoginProvider extends StateNotifier<LoginState> {
     emailController.clear();
     passwordController.clear();
   }
+
+  // Şifre sıfırlama emaili gönder
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      changeStateIsLoading(true);
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      changeStateIsLoading(false);
+      changeStateErrorMessage(ErrorStringsEnum.passwordResetEmailSent.value);
+      return true;
+    } on FirebaseAuthException catch (e) {
+      changeStateIsLoading(false);
+      // Firebase hatalarını kontrol et
+      if (e.code == 'user-not-found') {
+        changeStateErrorMessage(ErrorStringsEnum.userNotFoundError.value);
+      } else if (e.code == 'invalid-email') {
+        changeStateErrorMessage(ErrorStringsEnum.invalidEmailError.value);
+      } else {
+        changeStateErrorMessage(ErrorStringsEnum.unexpectedError.value);
+      }
+      return false;
+    } catch (e) {
+      changeStateIsLoading(false);
+      changeStateErrorMessage(ErrorStringsEnum.unexpectedError.value);
+      return false;
+    }
+  }
 }
 
 class LoginState extends Equatable {
