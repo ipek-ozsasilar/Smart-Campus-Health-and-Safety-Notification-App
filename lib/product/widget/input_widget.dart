@@ -11,6 +11,7 @@ class InputWidget extends StatelessWidget {
   final String? Function(String?)? validator;
   final bool obscureText;
   final VoidCallback? onSuffixIconPressed;
+  final int? maxLines;
 
   const InputWidget({
     super.key,
@@ -23,6 +24,7 @@ class InputWidget extends StatelessWidget {
     this.validator,
     this.obscureText = false,
     this.onSuffixIconPressed,
+    this.maxLines = 1,
   });
 
   @override
@@ -73,6 +75,7 @@ class InputWidget extends StatelessWidget {
       inputFormatters: inputFormatters,
       validator: validator,
       obscureText: obscureText,
+      maxLines: maxLines,
     );
   }
 }

@@ -4,7 +4,8 @@ import 'package:mobil_proje/feature/login/login_screen.dart';
 import 'package:mobil_proje/feature/login/provider/log_in_provider.dart';
 import 'package:mobil_proje/product/enum/error_strings.dart';
 import 'package:mobil_proje/product/mixin/scaffold_message.dart';
-  
+import 'package:mobil_proje/feature/home/home_screen.dart';
+
 abstract class LoginViewModel extends ConsumerState<LogInView>
     with ScaffoldMessage<LogInView> {
   // Build içinde çağrılır - state değişikliklerini dinler
@@ -13,8 +14,12 @@ abstract class LoginViewModel extends ConsumerState<LogInView>
       // Loading bitti, sonucu kontrol et
       if (previous != null && previous.isLoading && !next.isLoading) {
         if (next.errorMessage == ErrorStringsEnum.loginSuccess.value) {
-          // Login başarılı, home'a git - TODO: CreateChatView eklenmeli
-          // context.navigateTo(const CreateChatView());
+          // Login başarılı, home'a git
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          );
           //email ve password'u temizle
           clearEmailAndPassword();
         } else if (next.errorMessage != null && next.errorMessage!.isNotEmpty) {
@@ -82,8 +87,11 @@ abstract class LoginViewModel extends ConsumerState<LogInView>
   Future<void> googleLogin() async {
     final result = await ref.read(loginProvider.notifier).GoogleLogin();
     if (result) {
-      // TODO: CreateChatView eklenmeli
-      // context.navigateTo(const CreateChatView());
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (route) => false,
+      );
       clearEmailAndPassword();
     } else {
       showSnackBar(ErrorStringsEnum.loginFailed.value);
