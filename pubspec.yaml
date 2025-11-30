@@ -78,6 +78,9 @@ dependencies:
   #url launcher
   url_launcher: ^6.1.10
 
+  #google maps
+  google_maps_flutter: ^2.5.0
+
   #firebase
   firebase_core: ^3.14.0
   cloud_firestore: ^5.6.11

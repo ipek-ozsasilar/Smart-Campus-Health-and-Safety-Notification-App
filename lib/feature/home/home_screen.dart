@@ -92,193 +92,214 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          'Bildirimler',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: ColorName.inputBackground,
-                  title: const Text(
-                    'Ara',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  content: TextField(
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      hintText: 'Başlık veya açıklama ara...',
-                      hintStyle: const TextStyle(
-                        color: ColorName.loginGreyTextColor,
-                      ),
-                      filled: true,
-                      fillColor: ColorName.darkBackground,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                          color: ColorName.inputBorder,
-                        ),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Kapat',
-                        style: TextStyle(color: ColorName.goldenAccent),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
+        title: Text(
+          _currentIndex == 0
+              ? 'Bildirimler'
+              : _currentIndex == 1
+              ? 'Harita'
+              : 'Profil',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.white),
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: ColorName.inputBackground,
-                builder: (context) => Container(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Filtrele',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+        ),
+        actions: _currentIndex == 0
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.search, color: Colors.white),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        backgroundColor: ColorName.inputBackground,
+                        title: const Text(
+                          'Ara',
+                          style: TextStyle(color: Colors.white),
                         ),
+                        content: TextField(
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Başlık veya açıklama ara...',
+                            hintStyle: const TextStyle(
+                              color: ColorName.loginGreyTextColor,
+                            ),
+                            filled: true,
+                            fillColor: ColorName.darkBackground,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(
+                                color: ColorName.inputBorder,
+                              ),
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'Kapat',
+                              style: TextStyle(color: ColorName.goldenAccent),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 20),
-                      const Text('Tür:', style: TextStyle(color: Colors.white)),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          ...NotificationType.values.map((type) {
-                            return FilterChip(
-                              label: Text(type.label),
-                              selected: _selectedFilter == type,
-                              onSelected: (selected) {
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.filter_list, color: Colors.white),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: ColorName.inputBackground,
+                      builder: (context) => Container(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Filtrele',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              'Tür:',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ...NotificationType.values.map((type) {
+                                  return FilterChip(
+                                    label: Text(type.label),
+                                    selected: _selectedFilter == type,
+                                    onSelected: (selected) {
+                                      setState(() {
+                                        _selectedFilter = selected
+                                            ? type
+                                            : null;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    selectedColor: ColorName.goldenAccent,
+                                    labelStyle: TextStyle(
+                                      color: _selectedFilter == type
+                                          ? Colors.black
+                                          : Colors.white,
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            SwitchListTile(
+                              title: const Text(
+                                'Sadece Açık Olanlar',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              value: _showOpenOnly,
+                              onChanged: (value) {
                                 setState(() {
-                                  _selectedFilter = selected ? type : null;
+                                  _showOpenOnly = value;
                                 });
                                 Navigator.pop(context);
                               },
-                              selectedColor: ColorName.goldenAccent,
-                              labelStyle: TextStyle(
-                                color: _selectedFilter == type
-                                    ? Colors.black
-                                    : Colors.white,
+                              activeColor: ColorName.goldenAccent,
+                            ),
+                            SwitchListTile(
+                              title: const Text(
+                                'Takip Edilenler',
+                                style: TextStyle(color: Colors.white),
                               ),
-                            );
-                          }),
-                        ],
+                              value: _showFollowingOnly,
+                              onChanged: (value) {
+                                setState(() {
+                                  _showFollowingOnly = value;
+                                });
+                                Navigator.pop(context);
+                              },
+                              activeColor: ColorName.goldenAccent,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ]
+            : null,
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          // Ana Sayfa
+          _filteredNotifications.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.notifications_none,
+                        size: 64,
+                        color: ColorName.loginGreyTextColor,
                       ),
                       const SizedBox(height: 16),
-                      SwitchListTile(
-                        title: const Text(
-                          'Sadece Açık Olanlar',
-                          style: TextStyle(color: Colors.white),
+                      Text(
+                        'Bildirim bulunamadı',
+                        style: TextStyle(
+                          color: ColorName.loginGreyTextColor,
+                          fontSize: 16,
                         ),
-                        value: _showOpenOnly,
-                        onChanged: (value) {
-                          setState(() {
-                            _showOpenOnly = value;
-                          });
-                          Navigator.pop(context);
-                        },
-                        activeColor: ColorName.goldenAccent,
-                      ),
-                      SwitchListTile(
-                        title: const Text(
-                          'Takip Edilenler',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        value: _showFollowingOnly,
-                        onChanged: (value) {
-                          setState(() {
-                            _showFollowingOnly = value;
-                          });
-                          Navigator.pop(context);
-                        },
-                        activeColor: ColorName.goldenAccent,
                       ),
                     ],
                   ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: _filteredNotifications.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 64,
-                    color: ColorName.loginGreyTextColor,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Bildirim bulunamadı',
-                    style: TextStyle(
-                      color: ColorName.loginGreyTextColor,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _filteredNotifications.length,
-              itemBuilder: (context, index) {
-                final notification = _filteredNotifications[index];
-                return _NotificationCard(
-                  notification: notification,
-                  onTap: () {
-                    context.navigateTo(
-                      NotificationDetailScreen(notification: notification),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _filteredNotifications.length,
+                  itemBuilder: (context, index) {
+                    final notification = _filteredNotifications[index];
+                    return _NotificationCard(
+                      notification: notification,
+                      onTap: () {
+                        context.navigateTo(
+                          NotificationDetailScreen(notification: notification),
+                        );
+                      },
                     );
                   },
-                );
-              },
-            ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          context.navigateTo(const CreateNotificationScreen());
-        },
-        backgroundColor: ColorName.goldenAccent,
-        child: const Icon(Icons.add, color: Colors.black),
+                ),
+          // Harita
+          const MapScreen(),
+          // Profil
+          const ProfileScreen(),
+        ],
       ),
+      floatingActionButton: _currentIndex == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                context.navigateTo(const CreateNotificationScreen());
+              },
+              backgroundColor: ColorName.goldenAccent,
+              child: const Icon(Icons.add, color: Colors.black),
+            )
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
-          if (index == 1) {
-            context.navigateTo(const MapScreen());
-          } else if (index == 2) {
-            context.navigateTo(const ProfileScreen());
-          }
         },
         backgroundColor: ColorName.inputBackground,
         selectedItemColor: ColorName.goldenAccent,
