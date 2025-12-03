@@ -50,11 +50,11 @@ class NotificationModel {
             (map['status'] as String? ?? NotificationStatus.open.name),
         orElse: () => NotificationStatus.open,
       ),
-      createdAt:
-          (map['createdAt'] as DateTime?) ??
-          (map['createdAt'] is Timestamp
-              ? (map['createdAt'] as Timestamp).toDate()
-              : DateTime.now()),
+      createdAt: map['createdAt'] is Timestamp
+          ? (map['createdAt'] as Timestamp).toDate()
+          : (map['createdAt'] is DateTime
+                ? map['createdAt'] as DateTime
+                : DateTime.now()),
       latitude: (map['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (map['longitude'] as num?)?.toDouble() ?? 0,
       userId: map['userId'] as String? ?? '',
