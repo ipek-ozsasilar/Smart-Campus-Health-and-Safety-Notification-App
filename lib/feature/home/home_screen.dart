@@ -279,8 +279,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     );
                   },
                 ),
-          // Harita
-          const MapScreen(),
+          // Harita - ana listedeki bildirimleri kullanır
+          MapScreen(
+            notifications: _notifications,
+            showAppBar: false, // üst appbar HomeScreen'den geliyor
+          ),
           // Profil
           const ProfileScreen(),
         ],
@@ -288,7 +291,15 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: _currentIndex == 0
           ? FloatingActionButton(
               onPressed: () {
-                context.navigateTo(const CreateNotificationScreen());
+                context.navigateTo(
+                  CreateNotificationScreen(
+                    onCreate: (notification) {
+                      setState(() {
+                        _notifications.add(notification);
+                      });
+                    },
+                  ),
+                );
               },
               backgroundColor: ColorName.goldenAccent,
               child: const Icon(Icons.add, color: Colors.black),

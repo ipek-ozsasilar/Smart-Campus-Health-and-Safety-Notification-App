@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/enum/notification_type.dart';
+import 'package:mobil_proje/product/enum/notification_status.dart';
+import 'package:mobil_proje/product/model/notification_model.dart';
 import 'package:mobil_proje/product/widget/input_widget.dart';
 import 'package:mobil_proje/product/widget/global_elevated_button.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mobil_proje/feature/map/location_picker_screen.dart';
 
 class CreateNotificationScreen extends StatefulWidget {
-  const CreateNotificationScreen({super.key});
+  const CreateNotificationScreen({super.key, required this.onCreate});
+
+  final void Function(NotificationModel notification) onCreate;
 
   @override
-  State<CreateNotificationScreen> createState() => _CreateNotificationScreenState();
+  State<CreateNotificationScreen> createState() =>
+      _CreateNotificationScreenState();
 }
 
 class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
@@ -72,26 +79,39 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                       });
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected ? type.color.withOpacity(0.2) : ColorName.inputBackground,
+                        color: isSelected
+                            ? type.color.withOpacity(0.2)
+                            : ColorName.inputBackground,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isSelected ? type.color : ColorName.inputBorder,
+                          color: isSelected
+                              ? type.color
+                              : ColorName.inputBorder,
                           width: isSelected ? 2 : 1,
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(type.icon, color: isSelected ? type.color : Colors.white, size: 20),
+                          Icon(
+                            type.icon,
+                            color: isSelected ? type.color : Colors.white,
+                            size: 20,
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             type.label,
                             style: TextStyle(
                               color: isSelected ? type.color : Colors.white,
                               fontSize: 14,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                             ),
                           ),
                         ],
@@ -166,23 +186,40 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.map, size: 48, color: ColorName.loginGreyTextColor),
+                          Icon(
+                            Icons.map,
+                            size: 48,
+                            color: ColorName.loginGreyTextColor,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             'Harita görünümü',
-                            style: TextStyle(color: ColorName.loginGreyTextColor),
+                            style: TextStyle(
+                              color: ColorName.loginGreyTextColor,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           ElevatedButton.icon(
-                            onPressed: () {
-                              // Mock: Konum seçimi
-                              setState(() {
-                                _latitude = 39.9042;
-                                _longitude = 41.2679;
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Konum seçildi')),
+                            onPressed: () async {
+                              final result = await Navigator.push<LatLng>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const LocationPickerScreen(),
+                                ),
                               );
+
+                              if (result != null) {
+                                setState(() {
+                                  _latitude = result.latitude;
+                                  _longitude = result.longitude;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Konum seçildi'),
+                                  ),
+                                );
+                              }
                             },
                             icon: const Icon(Icons.location_on),
                             label: const Text('Konum Seç'),
@@ -206,7 +243,10 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                           ),
                           child: Text(
                             'Konum: ${_latitude!.toStringAsFixed(4)}, ${_longitude!.toStringAsFixed(4)}',
-                            style: const TextStyle(color: Colors.black, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ),
@@ -240,7 +280,9 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: ColorName.inputBorder),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               if (_imageUrls.isNotEmpty) ...[
@@ -261,7 +303,10 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                         child: Stack(
                           children: [
                             Center(
-                              child: Icon(Icons.image, color: ColorName.loginGreyTextColor),
+                              child: Icon(
+                                Icons.image,
+                                color: ColorName.loginGreyTextColor,
+                              ),
                             ),
                             Positioned(
                               top: 4,
@@ -278,7 +323,11 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                                     color: ColorName.errorRed,
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                  child: const Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),
@@ -306,9 +355,26 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                       );
                       return;
                     }
-                    // Mock: Bildirim oluşturuldu
+                    // Mock: Bildirim oluşturuldu ve ana listeye eklendi
+                    widget.onCreate(
+                      NotificationModel(
+                        id: DateTime.now().millisecondsSinceEpoch
+                            .toString(), // basit id
+                        title: _titleController.text.trim(),
+                        description: _descriptionController.text.trim(),
+                        type: _selectedType!,
+                        status: NotificationStatus.open,
+                        createdAt: DateTime.now(),
+                        latitude: _latitude!,
+                        longitude: _longitude!,
+                        userId: 'mock_user', // gerçek projede auth'dan gelecek
+                        imageUrls: _imageUrls.isEmpty ? null : _imageUrls,
+                      ),
+                    );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Bildirim başarıyla oluşturuldu')),
+                      const SnackBar(
+                        content: Text('Bildirim başarıyla oluşturuldu'),
+                      ),
                     );
                     Navigator.pop(context);
                   }
@@ -323,4 +389,3 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
     );
   }
 }
-

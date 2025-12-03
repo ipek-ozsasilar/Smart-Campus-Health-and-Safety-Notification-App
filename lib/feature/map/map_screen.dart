@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/enum/notification_type.dart';
-import 'package:mobil_proje/product/enum/notification_status.dart';
 import 'package:mobil_proje/product/model/notification_model.dart';
 import 'package:mobil_proje/product/mixin/navigation_mixin.dart';
 import 'package:mobil_proje/feature/notification/notification_detail_screen.dart';
 
 class MapScreen extends StatefulWidget {
-  const MapScreen({super.key});
+  const MapScreen({
+    super.key,
+    required this.notifications,
+    this.showAppBar = true,
+  });
+
+  final List<NotificationModel> notifications;
+  final bool showAppBar;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -18,7 +24,6 @@ class _MapScreenState extends State<MapScreen> {
   GoogleMapController? _mapController;
   String? _mapError;
   bool _isMapLoading = true;
-  bool _tilesLoaded = false;
 
   // Atatürk Üniversitesi koordinatları (Erzurum)
   static const CameraPosition _initialPosition = CameraPosition(
@@ -26,44 +31,10 @@ class _MapScreenState extends State<MapScreen> {
     zoom: 15.0,
   );
 
-  // Mock data
-  final List<NotificationModel> _notifications = [
-    NotificationModel(
-      id: '1',
-      title: 'Kampüs içi güvenlik kamerası arızası',
-      description: 'E2 binası girişindeki güvenlik kamerası çalışmıyor',
-      type: NotificationType.security,
-      status: NotificationStatus.open,
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      latitude: 39.9042,
-      longitude: 41.2679,
-      userId: 'user1',
-    ),
-    NotificationModel(
-      id: '2',
-      title: 'Çöp kutusu taşmış',
-      description: 'Kütüphane önündeki çöp kutusu taşmış durumda',
-      type: NotificationType.environment,
-      status: NotificationStatus.inProgress,
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      latitude: 39.9050,
-      longitude: 41.2685,
-      userId: 'user2',
-    ),
-  ];
-
   NotificationModel? _selectedNotification;
 
-  Set<Marker> _markers = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _createMarkers();
-  }
-
-  void _createMarkers() {
-    _markers = _notifications.map((notification) {
+  Set<Marker> get _markers {
+    return widget.notifications.map((notification) {
       return Marker(
         markerId: MarkerId(notification.id),
         position: LatLng(notification.latitude, notification.longitude),
@@ -266,6 +237,156 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mapBody = _mapError != null
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(
+                  'Harita yüklenemedi',
+                  style: TextStyle(
+                    color: ColorName.loginGreyTextColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    _mapError!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: ColorName.loginGreyTextColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _mapError = null;
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ColorName.goldenAccent,
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Tekrar Dene'),
+                ),
+              ],
+            ),
+          )
+        : Stack(
+            children: [
+              // Google Maps
+              GoogleMap(
+                onMapCreated: (GoogleMapController controller) async {
+                  _mapController = controller;
+                  // Harita başarıyla yüklendi
+                  debugPrint('✅ Google Maps controller oluşturuldu');
+                  debugPrint('📍 Initial position: ${_initialPosition.target}');
+                  debugPrint('📍 Markers count: ${_markers.length}');
+
+                  // Kısa bir beklemeden sonra "yükleniyor" etiketini kaldır
+                  // (gerçek cihazda harita zaten yüklenmiş oluyor)
+                  Future.delayed(const Duration(seconds: 1), () {
+                    if (!mounted) return;
+                    setState(() {
+                      _isMapLoading = false;
+                    });
+                  });
+
+                  // Style'ı geçici olarak kapat - test için
+                  // Harita çalıştıktan sonra tekrar açabilirsiniz
+                  // controller.setMapStyle(_mapStyle).catchError((error) {
+                  //   debugPrint('❌ Map style error: $error');
+                  // });
+                },
+                initialCameraPosition: _initialPosition,
+                markers: _markers,
+                mapType: MapType.normal,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                compassEnabled: false,
+                mapToolbarEnabled: false,
+                rotateGesturesEnabled: true,
+                scrollGesturesEnabled: true,
+                tiltGesturesEnabled: false,
+                zoomGesturesEnabled: true,
+                onTap: (LatLng position) {
+                  setState(() {
+                    _selectedNotification = null;
+                  });
+                },
+              ),
+              // Yükleniyor göstergesi
+              if (_isMapLoading)
+                Positioned(
+                  top: 20,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: ColorName.goldenAccent,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Harita yükleniyor...',
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              // Seçili bildirim kartı
+              if (_selectedNotification != null)
+                Positioned(
+                  bottom: 20,
+                  left: 16,
+                  right: 16,
+                  child: _PinInfoCard(
+                    notification: _selectedNotification!,
+                    onDetailTap: () {
+                      context.navigateTo(
+                        NotificationDetailScreen(
+                          notification: _selectedNotification!,
+                        ),
+                      );
+                    },
+                    onClose: () {
+                      setState(() {
+                        _selectedNotification = null;
+                      });
+                    },
+                  ),
+                ),
+            ],
+          );
+
+    if (!widget.showAppBar) {
+      // Harita, dıştaki Scaffold içinde (ör. HomeScreen) gösteriliyorsa
+      // sadece gövdeyi döndür.
+      return mapBody;
+    }
+
     return Scaffold(
       backgroundColor: ColorName.darkBackground,
       appBar: AppBar(
@@ -287,225 +408,7 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
-      body: _mapError != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Harita yüklenemedi',
-                    style: TextStyle(
-                      color: ColorName.loginGreyTextColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
-                    child: Text(
-                      _mapError!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: ColorName.loginGreyTextColor,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _mapError = null;
-                      });
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: ColorName.goldenAccent,
-                      foregroundColor: Colors.black,
-                    ),
-                    child: const Text('Tekrar Dene'),
-                  ),
-                ],
-              ),
-            )
-          : Stack(
-              children: [
-                // Google Maps
-                GoogleMap(
-                  onMapCreated: (GoogleMapController controller) async {
-                    _mapController = controller;
-                    // Harita başarıyla yüklendi
-                    debugPrint('✅ Google Maps controller oluşturuldu');
-                    debugPrint(
-                      '📍 Initial position: ${_initialPosition.target}',
-                    );
-                    debugPrint('📍 Markers count: ${_markers.length}');
-
-                    // Harita yüklendikten sonra bir süre bekle
-                    await Future.delayed(const Duration(milliseconds: 500));
-                    debugPrint('📍 Harita tile kontrolü yapılıyor...');
-
-                    // 5 saniye sonra tile'lar yüklenmediyse uyarı göster ve loading'i durdur
-                    Future.delayed(const Duration(seconds: 5), () {
-                      if (mounted && !_tilesLoaded) {
-                        debugPrint(
-                          '⚠️ UYARI: Harita tile\'ları hala yüklenmedi!',
-                        );
-                        debugPrint('⚠️ API Key kontrolü yapın:');
-                        debugPrint(
-                          '   1. Google Cloud Console → Maps SDK for Android ENABLE (EN ÖNEMLİSİ!)',
-                        );
-                        debugPrint('   2. Billing açık olmalı (✅ Yaptınız)');
-                        debugPrint(
-                          '   3. API Key restriction\'larını geçici olarak kaldırın',
-                        );
-                        debugPrint(
-                          '   4. Gerçek Android cihazda test edin (emulator sorunlu olabilir)',
-                        );
-
-                        setState(() {
-                          _isMapLoading = false;
-                        });
-                      }
-                    });
-
-                    // Style'ı geçici olarak kapat - test için
-                    // Harita çalıştıktan sonra tekrar açabilirsiniz
-                    // controller.setMapStyle(_mapStyle).catchError((error) {
-                    //   debugPrint('❌ Map style error: $error');
-                    // });
-                  },
-                  initialCameraPosition: _initialPosition,
-                  markers: _markers,
-                  mapType: MapType.normal,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  compassEnabled: false,
-                  mapToolbarEnabled: false,
-                  rotateGesturesEnabled: true,
-                  scrollGesturesEnabled: true,
-                  tiltGesturesEnabled: false,
-                  zoomGesturesEnabled: true,
-                  onTap: (LatLng position) {
-                    setState(() {
-                      _selectedNotification = null;
-                    });
-                  },
-                  onCameraMoveStarted: () {
-                    debugPrint('📍 Harita hareket etmeye başladı');
-                    if (!_tilesLoaded) {
-                      setState(() {
-                        _tilesLoaded = true;
-                        _isMapLoading = false;
-                      });
-                      debugPrint('✅ Tile\'lar yüklendi!');
-                    }
-                  },
-                  onCameraIdle: () {
-                    debugPrint('📍 Harita durdu');
-                  },
-                ),
-                // Yükleniyor göstergesi
-                if (_isMapLoading)
-                  Positioned(
-                    top: 20,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: ColorName.goldenAccent,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'Harita yükleniyor...',
-                            style: TextStyle(color: Colors.white, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                // API Key uyarısı (eğer tile'lar yüklenmediyse)
-                if (!_tilesLoaded && !_isMapLoading)
-                  Positioned(
-                    bottom: 100,
-                    left: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.warning, color: Colors.white),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Harita Yüklenemedi',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            '1. Google Cloud Console → APIs & Services → Library\n'
-                            '2. "Maps SDK for Android" arayın ve ENABLE yapın\n'
-                            '3. API Key restriction\'larını geçici kaldırın\n'
-                            '4. Gerçek Android cihazda test edin',
-                            style: TextStyle(color: Colors.white, fontSize: 11),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                // Seçili bildirim kartı
-                if (_selectedNotification != null)
-                  Positioned(
-                    bottom: 20,
-                    left: 16,
-                    right: 16,
-                    child: _PinInfoCard(
-                      notification: _selectedNotification!,
-                      onDetailTap: () {
-                        context.navigateTo(
-                          NotificationDetailScreen(
-                            notification: _selectedNotification!,
-                          ),
-                        );
-                      },
-                      onClose: () {
-                        setState(() {
-                          _selectedNotification = null;
-                        });
-                      },
-                    ),
-                  ),
-              ],
-            ),
+      body: mapBody,
     );
   }
 }
