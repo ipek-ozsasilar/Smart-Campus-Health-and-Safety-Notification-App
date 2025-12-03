@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -49,6 +50,12 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
   Future<bool> checkEmailAndPassword() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
+    final fullName = fullNameController.text.trim();
+
+    if (fullName.isEmpty) {
+      changeStateErrorMessage('İsim boş olamaz');
+      return false;
+    }
 
     // Email boş mu kontrol et
     if (email.isEmpty) {
@@ -63,6 +70,7 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
     }
 
     // Email ve password geçerliyse state'e kaydet
+    changeStateFullName(fullName);
     changeStateEmail(email);
     changeStatePassword(password);
     return true;
@@ -77,6 +85,11 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
         password: state.password!,
       );
       if (user.user != null) {
+        await _createUserDocument(
+          user.user!,
+          fullName: state.fullName ?? fullNameController.text.trim(),
+          email: state.email!,
+        );
         changeStateErrorMessage(ErrorStringsEnum.createAccountSuccess.value);
         changeStateIsLoading(false);
         clearFullNameAndEmailAndPassword();
@@ -148,6 +161,11 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
           .signInWithCredential(credential);
 
       if (userCredential.user != null) {
+        await _createUserDocument(
+          userCredential.user!,
+          fullName: userCredential.user!.displayName,
+          email: userCredential.user!.email,
+        );
         changeStateErrorMessage(ErrorStringsEnum.loginSuccess.value);
         changeStateIsLoading(false);
         return true;
@@ -201,6 +219,45 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
     fullNameController.clear();
     emailController.clear();
     passwordController.clear();
+    changeStateFullName('');
+    changeStateEmail('');
+    changeStatePassword('');
+  }
+
+  Future<void> _createUserDocument(
+    User user, {
+    String? fullName,
+    String? email,
+  }) async {
+    final userDoc = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid);
+    final docSnapshot = await userDoc.get();
+    final resolvedName = (fullName?.trim().isNotEmpty ?? false)
+        ? fullName!.trim()
+        : 'Kullanıcı';
+    final resolvedEmail = email ?? user.email ?? '';
+
+    if (docSnapshot.exists) {
+      // Sadece eksik alanları tamamla
+      await userDoc.set({
+        'fullname': resolvedName,
+        'email': resolvedEmail,
+        'role': docSnapshot.data()?['role'] ?? 'user',
+      }, SetOptions(merge: true));
+    } else {
+      await userDoc.set({
+        'id': user.uid,
+        'fullname': resolvedName,
+        'email': resolvedEmail,
+        'role': 'user',
+        'unit': null,
+        'notificationsEnabled': true,
+        'emailNotifications': true,
+        'pushNotifications': true,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
   }
 }
 
