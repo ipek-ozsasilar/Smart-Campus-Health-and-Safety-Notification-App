@@ -269,7 +269,7 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                 onPressed: () {
                   // Mock: Fotoğraf seçimi
                   setState(() {
-                    imageUrls.add('image${_imageUrls.length + 1}');
+                    _imageUrls.add('image${_imageUrls.length + 1}');
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Fotoğraf eklendi')),
