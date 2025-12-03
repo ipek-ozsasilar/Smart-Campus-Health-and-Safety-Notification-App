@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/widget/input_widget.dart';
 import 'package:mobil_proje/product/widget/global_elevated_button.dart';
@@ -114,16 +116,29 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
               GlobalElevatedButton(
                 onPressed: () {
                   if (_formKey.currentState?.validate() ?? false) {
-                    // Mock: Acil bildirim gönderildi
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Acil durum bildirimi tüm kullanıcılara gönderildi',
-                        ),
-                        backgroundColor: ColorName.errorRed,
-                      ),
-                    );
-                    Navigator.pop(context);
+                    final adminId =
+                        FirebaseAuth.instance.currentUser?.uid ?? 'admin';
+                    FirebaseFirestore.instance
+                        .collection('emergencyAlerts')
+                        .add({
+                          'title': _titleController.text.trim(),
+                          'message': _messageController.text.trim(),
+                          'createdAt': DateTime.now(),
+                          'createdBy': adminId,
+                          'isActive': true,
+                          'priority': 'high',
+                        })
+                        .then((_) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Acil durum bildirimi tüm kullanıcılara gönderildi',
+                              ),
+                              backgroundColor: ColorName.errorRed,
+                            ),
+                          );
+                          Navigator.pop(context);
+                        });
                   }
                 },
                 text: 'Bildirimi Yayınla',

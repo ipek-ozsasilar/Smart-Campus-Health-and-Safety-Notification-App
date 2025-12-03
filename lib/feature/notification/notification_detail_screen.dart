@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/enum/notification_status.dart';
 import 'package:mobil_proje/product/model/notification_model.dart';
@@ -15,18 +17,25 @@ class NotificationDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<NotificationDetailScreen> createState() => _NotificationDetailScreenState();
+  State<NotificationDetailScreen> createState() =>
+      _NotificationDetailScreenState();
 }
 
 class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
   bool _isFollowing = false;
   NotificationStatus _currentStatus = NotificationStatus.open;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _currentUserId = FirebaseAuth.instance.currentUser?.uid;
     _currentStatus = widget.notification.status;
-    _isFollowing = widget.notification.followingUserIds?.contains('current_user_id') ?? false;
+    if (_currentUserId != null) {
+      _isFollowing =
+          widget.notification.followingUserIds?.contains(_currentUserId) ??
+          false;
+    }
   }
 
   @override
@@ -77,7 +86,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     color: widget.notification.type.color.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(widget.notification.type.icon, color: widget.notification.type.color),
+                  child: Icon(
+                    widget.notification.type.icon,
+                    color: widget.notification.type.color,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -152,7 +164,11 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.map, size: 48, color: ColorName.loginGreyTextColor),
+                    Icon(
+                      Icons.map,
+                      size: 48,
+                      color: ColorName.loginGreyTextColor,
+                    ),
                     const SizedBox(height: 8),
                     Text(
                       'Harita görünümü',
@@ -160,7 +176,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                     ),
                     Text(
                       '${widget.notification.latitude.toStringAsFixed(4)}, ${widget.notification.longitude.toStringAsFixed(4)}',
-                      style: TextStyle(color: ColorName.loginGreyTextColor, fontSize: 12),
+                      style: TextStyle(
+                        color: ColorName.loginGreyTextColor,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -168,7 +187,8 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
             ),
             const SizedBox(height: 24),
             // Images
-            if (widget.notification.imageUrls != null && widget.notification.imageUrls!.isNotEmpty) ...[
+            if (widget.notification.imageUrls != null &&
+                widget.notification.imageUrls!.isNotEmpty) ...[
               const Text(
                 'Fotoğraflar',
                 style: TextStyle(
@@ -191,7 +211,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         color: ColorName.inputBackground,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.image, color: ColorName.loginGreyTextColor),
+                      child: Icon(
+                        Icons.image,
+                        color: ColorName.loginGreyTextColor,
+                      ),
                     );
                   },
                 ),
@@ -249,6 +272,10 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         setState(() {
                           _currentStatus = NotificationStatus.open;
                         });
+                        FirebaseFirestore.instance
+                            .collection('notifications')
+                            .doc(widget.notification.id)
+                            .update({'status': NotificationStatus.open.name});
                       },
                     ),
                   ),
@@ -261,6 +288,12 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         setState(() {
                           _currentStatus = NotificationStatus.inProgress;
                         });
+                        FirebaseFirestore.instance
+                            .collection('notifications')
+                            .doc(widget.notification.id)
+                            .update({
+                              'status': NotificationStatus.inProgress.name,
+                            });
                       },
                     ),
                   ),
@@ -273,6 +306,12 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                         setState(() {
                           _currentStatus = NotificationStatus.resolved;
                         });
+                        FirebaseFirestore.instance
+                            .collection('notifications')
+                            .doc(widget.notification.id)
+                            .update({
+                              'status': NotificationStatus.resolved.name,
+                            });
                       },
                     ),
                   ),
@@ -286,24 +325,53 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
+                    if (_currentUserId == null) return;
                     setState(() {
                       _isFollowing = !_isFollowing;
                     });
+                    final docRef = FirebaseFirestore.instance
+                        .collection('notifications')
+                        .doc(widget.notification.id);
+                    if (_isFollowing) {
+                      docRef.update({
+                        'followingUserIds': FieldValue.arrayUnion([
+                          _currentUserId,
+                        ]),
+                      });
+                    } else {
+                      docRef.update({
+                        'followingUserIds': FieldValue.arrayRemove([
+                          _currentUserId,
+                        ]),
+                      });
+                    }
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(_isFollowing ? 'Takip ediliyor' : 'Takip bırakıldı'),
+                        content: Text(
+                          _isFollowing ? 'Takip ediliyor' : 'Takip bırakıldı',
+                        ),
                       ),
                     );
                   },
-                  icon: Icon(_isFollowing ? Icons.notifications : Icons.notifications_none),
+                  icon: Icon(
+                    _isFollowing
+                        ? Icons.notifications
+                        : Icons.notifications_none,
+                  ),
                   label: Text(_isFollowing ? 'Takipten Çık' : 'Takip Et'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: _isFollowing ? ColorName.goldenAccent : Colors.white,
+                    foregroundColor: _isFollowing
+                        ? ColorName.goldenAccent
+                        : Colors.white,
                     side: BorderSide(
-                      color: _isFollowing ? ColorName.goldenAccent : Colors.white,
+                      color: _isFollowing
+                          ? ColorName.goldenAccent
+                          : Colors.white,
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -339,7 +407,11 @@ class _InfoRow extends StatelessWidget {
           ),
           Text(
             value,
-            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -366,7 +438,9 @@ class _StatusButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? status.color.withOpacity(0.2) : ColorName.inputBackground,
+          color: isSelected
+              ? status.color.withOpacity(0.2)
+              : ColorName.inputBackground,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? status.color : ColorName.inputBorder,
@@ -387,4 +461,3 @@ class _StatusButton extends StatelessWidget {
     );
   }
 }
-

@@ -7,6 +7,7 @@ import 'package:mobil_proje/product/widget/input_widget.dart';
 import 'package:mobil_proje/product/widget/global_elevated_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mobil_proje/feature/map/location_picker_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateNotificationScreen extends StatefulWidget {
   const CreateNotificationScreen({super.key, required this.onCreate});
@@ -268,7 +269,7 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                 onPressed: () {
                   // Mock: Fotoğraf seçimi
                   setState(() {
-                    _imageUrls.add('image_${_imageUrls.length + 1}');
+                    imageUrls.add('image${_imageUrls.length + 1}');
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Fotoğraf eklendi')),
@@ -356,6 +357,9 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                       return;
                     }
                     // Mock: Bildirim oluşturuldu ve ana listeye eklendi
+                    final currentUserId =
+                        FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
+
                     widget.onCreate(
                       NotificationModel(
                         id: DateTime.now().millisecondsSinceEpoch
@@ -367,7 +371,7 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                         createdAt: DateTime.now(),
                         latitude: _latitude!,
                         longitude: _longitude!,
-                        userId: 'mock_user', // gerçek projede auth'dan gelecek
+                        userId: currentUserId,
                         imageUrls: _imageUrls.isEmpty ? null : _imageUrls,
                       ),
                     );

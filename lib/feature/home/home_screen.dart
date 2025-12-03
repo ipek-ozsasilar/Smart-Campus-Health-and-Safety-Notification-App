@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/enum/notification_type.dart';
 import 'package:mobil_proje/product/enum/notification_status.dart';
@@ -23,38 +25,11 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _showOpenOnly = false;
   bool _showFollowingOnly = false;
 
-  // Mock data - gerçek uygulamada provider'dan gelecek
-  final List<NotificationModel> _notifications = [
-    NotificationModel(
-      id: '1',
-      title: 'Kampüs içi güvenlik kamerası arızası',
-      description: 'E2 binası girişindeki güvenlik kamerası çalışmıyor',
-      type: NotificationType.security,
-      status: NotificationStatus.open,
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      latitude: 39.9042,
-      longitude: 41.2679,
-      userId: 'user1',
-      userName: 'Ahmet Yılmaz',
-      unit: 'Bilgisayar Mühendisliği',
-    ),
-    NotificationModel(
-      id: '2',
-      title: 'Çöp kutusu taşmış',
-      description: 'Kütüphane önündeki çöp kutusu taşmış durumda',
-      type: NotificationType.environment,
-      status: NotificationStatus.inProgress,
-      createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      latitude: 39.9050,
-      longitude: 41.2685,
-      userId: 'user2',
-      userName: 'Mehmet Demir',
-      unit: 'Elektrik Mühendisliği',
-    ),
-  ];
-
-  List<NotificationModel> get _filteredNotifications {
-    var filtered = _notifications;
+  List<NotificationModel> _applyFilters(
+    List<NotificationModel> source,
+    String? currentUserId,
+  ) {
+    var filtered = source;
 
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((notification) {
@@ -78,8 +53,16 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (_showFollowingOnly) {
-      // Mock: takip edilen bildirimler
-      filtered = filtered.where((n) => n.id == '1').toList();
+      if (currentUserId != null) {
+        filtered = filtered
+            .where(
+              (n) =>
+                  (n.followingUserIds?.contains(currentUserId) ?? false),
+            )
+            .toList();
+      } else {
+        filtered = [];
+      }
     }
 
     return filtered;
@@ -87,6 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
     return Scaffold(
       backgroundColor: ColorName.darkBackground,
       appBar: AppBar(
@@ -239,64 +224,105 @@ class _HomeScreenState extends State<HomeScreen> {
               ]
             : null,
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          // Ana Sayfa
-          _filteredNotifications.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.notifications_none,
-                        size: 64,
-                        color: ColorName.loginGreyTextColor,
+      body: StreamBuilder<
+          QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirebaseFirestore.instance
+            .collection('notifications')
+            .orderBy('createdAt', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: ColorName.goldenAccent,
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Bildirimler yüklenirken hata oluştu',
+                style: TextStyle(color: ColorName.loginGreyTextColor),
+              ),
+            );
+          }
+
+          final notifications = snapshot.data?.docs
+                  .map(
+                    (doc) => NotificationModel.fromMap(
+                      doc.data(),
+                      doc.id,
+                    ),
+                  )
+                  .toList() ??
+              [];
+
+          final filteredNotifications =
+              _applyFilters(notifications, currentUserId);
+
+          return IndexedStack(
+            index: _currentIndex,
+            children: [
+              // Ana Sayfa
+              filteredNotifications.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.notifications_none,
+                            size: 64,
+                            color: ColorName.loginGreyTextColor,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Bildirim bulunamadı',
+                            style: TextStyle(
+                              color: ColorName.loginGreyTextColor,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Bildirim bulunamadı',
-                        style: TextStyle(
-                          color: ColorName.loginGreyTextColor,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _filteredNotifications.length,
-                  itemBuilder: (context, index) {
-                    final notification = _filteredNotifications[index];
-                    return _NotificationCard(
-                      notification: notification,
-                      onTap: () {
-                        context.navigateTo(
-                          NotificationDetailScreen(notification: notification),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filteredNotifications.length,
+                      itemBuilder: (context, index) {
+                        final notification = filteredNotifications[index];
+                        return _NotificationCard(
+                          notification: notification,
+                          onTap: () {
+                            context.navigateTo(
+                              NotificationDetailScreen(
+                                notification: notification,
+                              ),
+                            );
+                          },
                         );
                       },
-                    );
-                  },
-                ),
-          // Harita - ana listedeki bildirimleri kullanır
-          MapScreen(
-            notifications: _notifications,
-            showAppBar: false, // üst appbar HomeScreen'den geliyor
-          ),
-          // Profil
-          const ProfileScreen(),
-        ],
+                    ),
+              // Harita - ana listedeki bildirimleri kullanır
+              MapScreen(
+                notifications: notifications,
+                showAppBar: false, // üst appbar HomeScreen'den geliyor
+              ),
+              // Profil
+              const ProfileScreen(),
+            ],
+          );
+        },
       ),
       floatingActionButton: _currentIndex == 0
           ? FloatingActionButton(
               onPressed: () {
                 context.navigateTo(
                   CreateNotificationScreen(
-                    onCreate: (notification) {
-                      setState(() {
-                        _notifications.add(notification);
-                      });
+                    onCreate: (notification) async {
+                      await FirebaseFirestore.instance
+                          .collection('notifications')
+                          .add(notification.toMap());
                     },
                   ),
                 );

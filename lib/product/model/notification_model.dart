@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mobil_proje/product/enum/notification_type.dart';
 import 'package:mobil_proje/product/enum/notification_status.dart';
 
@@ -31,6 +32,56 @@ class NotificationModel {
     this.imageUrls,
     this.followingUserIds,
   });
+
+  factory NotificationModel.fromMap(Map<String, dynamic> map, String id) {
+    return NotificationModel(
+      id: id,
+      title: map['title'] as String? ?? '',
+      description: map['description'] as String? ?? '',
+      type: NotificationType.values.firstWhere(
+        (t) =>
+            t.name ==
+            (map['type'] as String? ?? NotificationType.security.name),
+        orElse: () => NotificationType.security,
+      ),
+      status: NotificationStatus.values.firstWhere(
+        (s) =>
+            s.name ==
+            (map['status'] as String? ?? NotificationStatus.open.name),
+        orElse: () => NotificationStatus.open,
+      ),
+      createdAt:
+          (map['createdAt'] as DateTime?) ??
+          (map['createdAt'] is Timestamp
+              ? (map['createdAt'] as Timestamp).toDate()
+              : DateTime.now()),
+      latitude: (map['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (map['longitude'] as num?)?.toDouble() ?? 0,
+      userId: map['userId'] as String? ?? '',
+      userName: map['userName'] as String?,
+      unit: map['unit'] as String?,
+      imageUrls: (map['imageUrls'] as List<dynamic>?)?.cast<String>(),
+      followingUserIds: (map['followingUserIds'] as List<dynamic>?)
+          ?.cast<String>(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'description': description,
+      'type': type.name,
+      'status': status.name,
+      'createdAt': createdAt,
+      'latitude': latitude,
+      'longitude': longitude,
+      'userId': userId,
+      if (userName != null) 'userName': userName,
+      if (unit != null) 'unit': unit,
+      if (imageUrls != null) 'imageUrls': imageUrls,
+      if (followingUserIds != null) 'followingUserIds': followingUserIds,
+    };
+  }
 
   String get timeAgo {
     final now = DateTime.now();

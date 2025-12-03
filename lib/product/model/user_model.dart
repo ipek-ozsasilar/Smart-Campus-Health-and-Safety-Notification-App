@@ -20,4 +20,23 @@ class UserModel {
     required this.role,
     this.unit,
   });
+
+  factory UserModel.fromMap(Map<String, dynamic> map, String id) {
+    return UserModel(
+      id: id,
+      fullName: map['fullname'] as String? ?? '',
+      email: map['email'] as String? ?? '',
+      role: map['role'] == 'admin' ? UserRole.admin : UserRole.user,
+      unit: map['unit'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'fullname': fullName,
+      'email': email,
+      'role': role == UserRole.admin ? 'admin' : 'user',
+      if (unit != null) 'unit': unit,
+    };
+  }
 }
