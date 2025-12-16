@@ -5,11 +5,13 @@ import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/enum/notification_type.dart';
 import 'package:mobil_proje/product/enum/notification_status.dart';
 import 'package:mobil_proje/product/model/notification_model.dart';
+import 'package:mobil_proje/product/model/user_model.dart';
 import 'package:mobil_proje/product/mixin/navigation_mixin.dart';
 import 'package:mobil_proje/feature/notification/notification_detail_screen.dart';
 import 'package:mobil_proje/feature/notification/create_notification_screen.dart';
 import 'package:mobil_proje/feature/map/map_screen.dart';
 import 'package:mobil_proje/feature/profile/profile_screen.dart';
+import 'package:mobil_proje/feature/admin/admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,6 +26,12 @@ class _HomeScreenState extends State<HomeScreen> {
   NotificationType? _selectedFilter;
   bool _showOpenOnly = false;
   bool _showFollowingOnly = false;
+  bool _showMyUnitOnly = false;
+
+  UserRole _currentUserRole = UserRole.user;
+  String? _currentUserUnit;
+
+  bool get _isAdmin => _currentUserRole == UserRole.admin;
 
   List<NotificationModel> _applyFilters(
     List<NotificationModel> source,
@@ -56,13 +64,16 @@ class _HomeScreenState extends State<HomeScreen> {
       if (currentUserId != null) {
         filtered = filtered
             .where(
-              (n) =>
-                  (n.followingUserIds?.contains(currentUserId) ?? false),
+              (n) => (n.followingUserIds?.contains(currentUserId) ?? false),
             )
             .toList();
       } else {
         filtered = [];
       }
+    }
+
+    if (_isAdmin && _showMyUnitOnly && _currentUserUnit != null) {
+      filtered = filtered.where((n) => n.unit == _currentUserUnit).toList();
     }
 
     return filtered;
@@ -71,6 +82,29 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+
+    // Kullanıcının rolü ve birimi admin filtreleri ve admin paneli için gerekli.
+    if (currentUserId != null && _currentUserUnit == null) {
+      FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserId)
+          .get()
+          .then((doc) {
+            if (!mounted || !doc.exists || doc.data() == null) return;
+            final data = doc.data()!;
+            final roleString = data['role'] as String? ?? 'user';
+            final unitString = data['unit'] as String?;
+            setState(() {
+              _currentUserRole = roleString == 'admin'
+                  ? UserRole.admin
+                  : UserRole.user;
+              _currentUserUnit = unitString;
+            });
+          })
+          .catchError((_) {
+            // Hata durumunda User olarak devam et
+          });
+    }
 
     return Scaffold(
       backgroundColor: ColorName.darkBackground,
@@ -215,17 +249,48 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               activeColor: ColorName.goldenAccent,
                             ),
+                            if (_isAdmin && _currentUserUnit != null)
+                              SwitchListTile(
+                                title: const Text(
+                                  'Kendi birimim',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  _currentUserUnit ?? '',
+                                  style: const TextStyle(
+                                    color: ColorName.loginGreyTextColor,
+                                  ),
+                                ),
+                                value: _showMyUnitOnly,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _showMyUnitOnly = value;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                activeColor: ColorName.goldenAccent,
+                              ),
                           ],
                         ),
                       ),
                     );
                   },
                 ),
+                if (_isAdmin)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.admin_panel_settings,
+                      color: Colors.white,
+                    ),
+                    tooltip: 'Admin Paneli',
+                    onPressed: () {
+                      context.navigateTo(const AdminScreen());
+                    },
+                  ),
               ]
             : null,
       ),
-      body: StreamBuilder<
-          QuerySnapshot<Map<String, dynamic>>>(
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('notifications')
             .orderBy('createdAt', descending: true)
@@ -233,9 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(
-                color: ColorName.goldenAccent,
-              ),
+              child: CircularProgressIndicator(color: ColorName.goldenAccent),
             );
           }
 
@@ -248,18 +311,16 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
 
-          final notifications = snapshot.data?.docs
-                  .map(
-                    (doc) => NotificationModel.fromMap(
-                      doc.data(),
-                      doc.id,
-                    ),
-                  )
+          final notifications =
+              snapshot.data?.docs
+                  .map((doc) => NotificationModel.fromMap(doc.data(), doc.id))
                   .toList() ??
               [];
 
-          final filteredNotifications =
-              _applyFilters(notifications, currentUserId);
+          final filteredNotifications = _applyFilters(
+            notifications,
+            currentUserId,
+          );
 
           return IndexedStack(
             index: _currentIndex,

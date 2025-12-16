@@ -47,14 +47,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: ColorName.darkBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text(
-          'Profil',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
+      // AppBar başlığı HomeScreen'den geldiği için burada tekrar "Profil"
+      // yazmamak adına appBar kullanmıyoruz.
       body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
         stream: userDocStream,
         builder: (context, userSnapshot) {

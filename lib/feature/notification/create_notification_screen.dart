@@ -8,6 +8,7 @@ import 'package:mobil_proje/product/widget/global_elevated_button.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mobil_proje/feature/map/location_picker_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CreateNotificationScreen extends StatefulWidget {
   const CreateNotificationScreen({super.key, required this.onCreate});
@@ -342,7 +343,7 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
               const SizedBox(height: 32),
               // Submit Button
               GlobalElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
                     if (_selectedType == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -357,13 +358,30 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                       return;
                     }
                     // Mock: Bildirim oluşturuldu ve ana listeye eklendi
-                    final currentUserId =
-                        FirebaseAuth.instance.currentUser?.uid ?? 'unknown';
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    final currentUserId = currentUser?.uid ?? 'unknown';
+
+                    String? userName;
+                    String? unit;
+                    if (currentUser != null) {
+                      try {
+                        final doc = await FirebaseFirestore.instance
+                            .collection('users')
+                            .doc(currentUser.uid)
+                            .get();
+                        if (doc.exists && doc.data() != null) {
+                          final data = doc.data()!;
+                          userName = data['fullname'] as String?;
+                          unit = data['unit'] as String?;
+                        }
+                      } catch (_) {
+                        // Profil bilgisi okunamazsa yalnızca userId kaydedilir.
+                      }
+                    }
 
                     widget.onCreate(
                       NotificationModel(
-                        id: DateTime.now().millisecondsSinceEpoch
-                            .toString(), // basit id
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
                         title: _titleController.text.trim(),
                         description: _descriptionController.text.trim(),
                         type: _selectedType!,
@@ -372,6 +390,8 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                         latitude: _latitude!,
                         longitude: _longitude!,
                         userId: currentUserId,
+                        userName: userName,
+                        unit: unit,
                         imageUrls: _imageUrls.isEmpty ? null : _imageUrls,
                       ),
                     );
