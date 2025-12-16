@@ -30,8 +30,41 @@ class _HomeScreenState extends State<HomeScreen> {
 
   UserRole _currentUserRole = UserRole.user;
   String? _currentUserUnit;
+  final Map<String, NotificationStatus> _lastStatuses = {};
+  bool _hasLoadedInitialStatuses = false;
 
   bool get _isAdmin => _currentUserRole == UserRole.admin;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUserInfo();
+  }
+
+  Future<void> _loadCurrentUserInfo() async {
+    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    if (currentUserId == null) return;
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserId)
+          .get();
+      if (!mounted || !doc.exists || doc.data() == null) return;
+
+      final data = doc.data()!;
+      final roleString = data['role'] as String? ?? 'user';
+      final unitString = data['unit'] as String?;
+      setState(() {
+        _currentUserRole = roleString == 'admin'
+            ? UserRole.admin
+            : UserRole.user;
+        _currentUserUnit = unitString;
+      });
+    } catch (_) {
+      // Hata durumunda User olarak devam et
+    }
+  }
 
   List<NotificationModel> _applyFilters(
     List<NotificationModel> source,
@@ -82,29 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-
-    // Kullanıcının rolü ve birimi admin filtreleri ve admin paneli için gerekli.
-    if (currentUserId != null && _currentUserUnit == null) {
-      FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUserId)
-          .get()
-          .then((doc) {
-            if (!mounted || !doc.exists || doc.data() == null) return;
-            final data = doc.data()!;
-            final roleString = data['role'] as String? ?? 'user';
-            final unitString = data['unit'] as String?;
-            setState(() {
-              _currentUserRole = roleString == 'admin'
-                  ? UserRole.admin
-                  : UserRole.user;
-              _currentUserUnit = unitString;
-            });
-          })
-          .catchError((_) {
-            // Hata durumunda User olarak devam et
-          });
-    }
 
     return Scaffold(
       backgroundColor: ColorName.darkBackground,
@@ -317,12 +327,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   .toList() ??
               [];
 
+          // Takip edilen bildirimlerin durum değişiklikleri için
+          // uygulama içi bildirim (SnackBar) göster.
+          if (currentUserId != null) {
+            if (_hasLoadedInitialStatuses) {
+              for (final n in notifications) {
+                final previous = _lastStatuses[n.id];
+                final isFollowing =
+                    n.followingUserIds?.contains(currentUserId) ?? false;
+                if (previous != null && previous != n.status && isFollowing) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '"${n.title}" bildiriminin durumu ${n.status.label} olarak güncellendi.',
+                        ),
+                      ),
+                    );
+                  });
+                }
+              }
+            }
+            _lastStatuses
+              ..clear()
+              ..addEntries(notifications.map((n) => MapEntry(n.id, n.status)));
+            _hasLoadedInitialStatuses = true;
+          }
+
           final filteredNotifications = _applyFilters(
             notifications,
             currentUserId,
           );
 
-          return IndexedStack(
+          final indexedStack = IndexedStack(
             index: _currentIndex,
             children: [
               // Ana Sayfa
@@ -372,6 +409,72 @@ class _HomeScreenState extends State<HomeScreen> {
               // Profil
               const ProfileScreen(),
             ],
+          );
+
+          // Acil durum duyuruları için üstte kırmızı bir banner göster.
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: FirebaseFirestore.instance
+                .collection('emergencyAlerts')
+                .where('isActive', isEqualTo: true)
+                .orderBy('createdAt', descending: true)
+                .limit(1)
+                .snapshots(),
+            builder: (context, emergencySnapshot) {
+              Widget? alertBanner;
+              if (emergencySnapshot.hasData &&
+                  emergencySnapshot.data!.docs.isNotEmpty) {
+                final data = emergencySnapshot.data!.docs.first.data();
+                final title = data['title'] as String? ?? 'Acil Durum';
+                final message = data['message'] as String? ?? '';
+
+                alertBanner = Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: ColorName.errorRed.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              message,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return Column(
+                children: [
+                  if (alertBanner != null) alertBanner,
+                  Expanded(child: indexedStack),
+                ],
+              );
+            },
           );
         },
       ),
