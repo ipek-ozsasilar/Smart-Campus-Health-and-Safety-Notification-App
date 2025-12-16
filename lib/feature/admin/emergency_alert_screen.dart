@@ -12,6 +12,7 @@ class EmergencyAlertScreen extends StatefulWidget {
   State<EmergencyAlertScreen> createState() => _EmergencyAlertScreenState();
 }
 
+
 class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
@@ -19,6 +20,7 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
 
   @override
   void dispose() {
+    // Dispose controllers to free up resources
     _titleController.dispose();
     _messageController.dispose();
     super.dispose();
