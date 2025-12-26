@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mobil_proje/product/constant/colors.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LocationPickerScreen extends StatefulWidget {
   const LocationPickerScreen({super.key});
@@ -11,6 +13,7 @@ class LocationPickerScreen extends StatefulWidget {
 
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
   LatLng? _selectedPosition;
+  GoogleMapController? _mapController;
 
   // Atatürk Üniversitesi koordinatları (Erzurum)
   static const CameraPosition _initialPosition = CameraPosition(
@@ -29,6 +32,53 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
           'Konum Seç',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.my_location, color: Colors.white),
+            onPressed: () async {
+              try {
+                final permissionStatus = await Permission.location.request();
+                if (!permissionStatus.isGranted) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Konum izni verilmedi')),
+                    );
+                  }
+                  return;
+                }
+
+                final position = await Geolocator.getCurrentPosition(
+                  desiredAccuracy: LocationAccuracy.high,
+                );
+
+                final newPosition = LatLng(
+                  position.latitude,
+                  position.longitude,
+                );
+                setState(() {
+                  _selectedPosition = newPosition;
+                });
+
+                _mapController?.animateCamera(
+                  CameraUpdate.newLatLngZoom(newPosition, 16.0),
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Cihaz konumuna gidildi')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Konum alınamadı: ${e.toString()}')),
+                  );
+                }
+              }
+            },
+            tooltip: 'Cihaz Konumuna Git',
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -38,7 +88,9 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
               mapType: MapType.normal,
               myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
-              onMapCreated: (_) {},
+              onMapCreated: (controller) {
+                _mapController = controller;
+              },
               onTap: (position) {
                 setState(() {
                   _selectedPosition = position;

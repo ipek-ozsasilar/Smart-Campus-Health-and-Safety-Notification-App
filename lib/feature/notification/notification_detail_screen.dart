@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mobil_proje/product/constant/colors.dart';
 import 'package:mobil_proje/product/enum/notification_status.dart';
+import 'package:mobil_proje/product/enum/notification_type.dart';
 import 'package:mobil_proje/product/model/notification_model.dart';
 import 'package:mobil_proje/product/model/user_model.dart';
 
@@ -35,6 +37,21 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
       _isFollowing =
           widget.notification.followingUserIds?.contains(_currentUserId) ??
           false;
+    }
+  }
+
+  double _getMarkerHue(NotificationType type) {
+    switch (type) {
+      case NotificationType.security:
+        return BitmapDescriptor.hueYellow;
+      case NotificationType.health:
+        return BitmapDescriptor.hueRed;
+      case NotificationType.environment:
+        return BitmapDescriptor.hueGreen;
+      case NotificationType.lostFound:
+        return BitmapDescriptor.hueBlue;
+      case NotificationType.technical:
+        return BitmapDescriptor.hueOrange;
     }
   }
 
@@ -159,30 +176,80 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
               decoration: BoxDecoration(
                 color: ColorName.inputBackground,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: ColorName.inputBorder, width: 1),
               ),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.map,
-                      size: 48,
-                      color: ColorName.loginGreyTextColor,
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                children: [
+                  GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: LatLng(
+                        widget.notification.latitude,
+                        widget.notification.longitude,
+                      ),
+                      zoom: 16.0,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Harita görünümü',
-                      style: TextStyle(color: ColorName.loginGreyTextColor),
-                    ),
-                    Text(
-                      '${widget.notification.latitude.toStringAsFixed(4)}, ${widget.notification.longitude.toStringAsFixed(4)}',
-                      style: TextStyle(
-                        color: ColorName.loginGreyTextColor,
-                        fontSize: 12,
+                    markers: {
+                      Marker(
+                        markerId: MarkerId(widget.notification.id),
+                        position: LatLng(
+                          widget.notification.latitude,
+                          widget.notification.longitude,
+                        ),
+                        icon: BitmapDescriptor.defaultMarkerWithHue(
+                          _getMarkerHue(widget.notification.type),
+                        ),
+                        infoWindow: InfoWindow(
+                          title: widget.notification.title,
+                          snippet: widget.notification.type.label,
+                        ),
+                      ),
+                    },
+                    mapType: MapType.normal,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: false,
+                    compassEnabled: false,
+                    mapToolbarEnabled: false,
+                    rotateGesturesEnabled: false,
+                    scrollGesturesEnabled: true,
+                    tiltGesturesEnabled: false,
+                    zoomGesturesEnabled: true,
+                    onMapCreated: (_) {},
+                  ),
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.7),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: ColorName.goldenAccent,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${widget.notification.latitude.toStringAsFixed(4)}, ${widget.notification.longitude.toStringAsFixed(4)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),

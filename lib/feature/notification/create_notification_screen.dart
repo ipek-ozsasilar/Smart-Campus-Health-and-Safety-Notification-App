@@ -9,6 +9,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mobil_proje/feature/map/location_picker_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
 
 class CreateNotificationScreen extends StatefulWidget {
   const CreateNotificationScreen({super.key, required this.onCreate});
@@ -201,34 +203,109 @@ class _CreateNotificationScreenState extends State<CreateNotificationScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              final result = await Navigator.push<LatLng>(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const LocationPickerScreen(),
-                                ),
-                              );
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    // Cihaz konumunu kullan
+                                    try {
+                                      final permissionStatus = await Permission
+                                          .location
+                                          .request();
+                                      if (!permissionStatus.isGranted) {
+                                        if (mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Konum izni verilmedi',
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        return;
+                                      }
 
-                              if (result != null) {
-                                setState(() {
-                                  _latitude = result.latitude;
-                                  _longitude = result.longitude;
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Konum seçildi'),
+                                      final position =
+                                          await Geolocator.getCurrentPosition(
+                                            desiredAccuracy:
+                                                LocationAccuracy.high,
+                                          );
+
+                                      if (mounted) {
+                                        setState(() {
+                                          _latitude = position.latitude;
+                                          _longitude = position.longitude;
+                                        });
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Cihaz konumu kullanıldı',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Konum alınamadı: ${e.toString()}',
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  icon: const Icon(Icons.my_location),
+                                  label: const Text('Cihaz Konumu'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: ColorName.goldenAccent,
+                                    foregroundColor: Colors.black,
                                   ),
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.location_on),
-                            label: const Text('Konum Seç'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: ColorName.goldenAccent,
-                              foregroundColor: Colors.black,
-                            ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    final result = await Navigator.push<LatLng>(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const LocationPickerScreen(),
+                                      ),
+                                    );
+
+                                    if (result != null) {
+                                      setState(() {
+                                        _latitude = result.latitude;
+                                        _longitude = result.longitude;
+                                      });
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Konum seçildi'),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.map),
+                                  label: const Text('Haritadan Seç'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: ColorName.goldenAccent,
+                                    foregroundColor: Colors.black,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
