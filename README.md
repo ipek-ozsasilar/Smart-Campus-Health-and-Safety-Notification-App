@@ -66,28 +66,33 @@ lib/
 > Örnek klasör: `docs/screenshots/`
 
 ### Login
-![Login Screen](docs/screenshots/login.png)
+
+<img width="295" height="646" alt="Image" src="https://github.com/user-attachments/assets/cddd410b-b023-43cc-aa5a-b3dd90b03eec" />
+<img width="295" height="655" alt="Image" src="https://github.com/user-attachments/assets/c53ca72c-f151-43c6-9e10-f610113e7e56" />
+<img width="292" height="648" alt="Image" src="https://github.com/user-attachments/assets/00d43efc-6fbf-4b0c-b153-fc1703d1ecd4" />
+
 
 ### Home
-![Home Screen](docs/screenshots/home.png)
+
+<img width="293" height="644" alt="Image" src="https://github.com/user-attachments/assets/d8f5be47-7e5b-4e7c-b831-c374c81dda83" />
 
 ### Create Notification
-![Create Notification Screen](docs/screenshots/create-notification.png)
+
+<img width="292" height="644" alt="Image" src="https://github.com/user-attachments/assets/173082b6-eeef-4e48-8f2f-7ea856fa3473" />
+<img width="293" height="650" alt="Image" src="https://github.com/user-attachments/assets/3b7ea199-3489-4bd5-aa02-a7eebf9921ef" />
 
 ### Notification Detail
-![Notification Detail Screen](docs/screenshots/notification-detail.png)
+
+<img width="290" height="646" alt="Image" src="https://github.com/user-attachments/assets/f369b52f-c60e-4dbc-b801-3ec8b570ffed" />
+<img width="286" height="651" alt="Image" src="https://github.com/user-attachments/assets/6cd0a12d-0e1d-4cb7-80f2-7e39e0028482" />
 
 ### Map
-![Map Screen](docs/screenshots/map.png)
+
+<img width="295" height="649" alt="Image" src="https://github.com/user-attachments/assets/0a6b5774-8342-497a-8a06-1eb126e55353" />
 
 ### Profile
-![Profile Screen](docs/screenshots/profile.png)
 
-### Admin Panel
-![Admin Screen](docs/screenshots/admin.png)
-
-### Emergency Alert
-![Emergency Alert Screen](docs/screenshots/emergency-alert.png)
+<img width="289" height="650" alt="Image" src="https://github.com/user-attachments/assets/b1f7d920-c148-4fdf-951e-fc1d60d6d54c" />
 
 ## Kurulum
 
