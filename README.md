@@ -1,34 +1,34 @@
 # Smart Campus Health & Safety Notification App
 
-Kampüs içinde sağlık, güvenlik ve teknik olayların hızlıca bildirilebildiği, takip edilebildiği ve harita üzerinde görüntülenebildiği Flutter tabanlı bir mobil uygulama.
+A Flutter-based mobile app for quickly reporting, tracking, and viewing health, safety, and technical incidents on campus via a map.
 
-## Proje Amacı
+## Project Purpose
 
-Bu uygulama, kampüs kullanıcılarının yaşadıkları olayları (ör. güvenlik, sağlık, teknik arıza, kayıp eşya vb.) tek bir noktadan raporlayabilmesini ve ilgili birimlerin süreci daha şeffaf bir şekilde yönetebilmesini hedefler.
+This app lets campus users report incidents (e.g. security, health, technical issues, lost items, etc.) from a single place, and helps relevant departments manage the process more transparently.
 
-## Temel Özellikler
+## Key Features
 
-- Firebase Authentication ile e-posta/şifre ve Google ile giriş
-- Bildirim oluşturma (kategori, başlık, açıklama, konum, opsiyonel görsel)
-- Canlı bildirim akışı (Firestore stream)
-- Bildirim arama ve filtreleme (kategori, durum, takip edilenler, birim)
-- Bildirim detay ekranı ve harita üzerinde olay noktası görüntüleme
-- Kullanıcıların bildirimleri takip etmesi ve durum değişikliği geri bildirimi
-- Rol bazlı yapı (kullanıcı / admin)
-- Admin panelinden bildirim durum güncelleme (Açık, İşlemde, Çözüldü)
-- Acil durum duyurusu yayınlama (üst bant uyarısı)
-- Profil ekranı (kullanıcı bilgileri, takip edilen bildirimler, ayarlar)
+- Sign in with email/password and Google via Firebase Authentication
+- Create notifications (category, title, description, location, optional image)
+- Live notification feed (Firestore stream)
+- Search and filter notifications (category, status, followed items, department)
+- Notification detail screen and incident location on the map
+- Follow notifications and get feedback on status changes
+- Role-based access (user / admin)
+- Update notification status from the admin panel (Open, In Progress, Resolved)
+- Publish emergency announcements (top banner alert)
+- Profile screen (user info, followed notifications, settings)
 
-## Kullanılan Teknolojiler
+## Tech Stack
 
 - **Framework:** Flutter
-- **Dil:** Dart
+- **Language:** Dart
 - **State Management:** Riverpod
 - **Backend:** Firebase (Auth, Firestore, Storage)
-- **Harita:** Google Maps Flutter
-- **Konum:** Geolocator + Permission Handler
+- **Maps:** Google Maps Flutter
+- **Location:** Geolocator + Permission Handler
 
-## Proje Yapısı
+## Project Structure
 
 ```text
 lib/
@@ -48,22 +48,22 @@ lib/
   main.dart
 ```
 
-## Ekranlar (Screens)
+## Screens
 
-- Giriş Ekranı
-- Kayıt Ol Ekranı
-- Ana Sayfa (Bildirim Listesi)
-- Bildirim Oluşturma Ekranı
-- Bildirim Detay Ekranı
-- Harita Ekranı
-- Profil Ekranı
-- Admin Paneli
-- Acil Durum Bildirimi Ekranı
+- Login Screen
+- Sign Up Screen
+- Home (Notification List)
+- Create Notification Screen
+- Notification Detail Screen
+- Map Screen
+- Profile Screen
+- Admin Panel
+- Emergency Alert Screen
 
 ## Screenshots
 
-> Bu bölüme ekran görüntülerini sen ekleyebilirsin.  
-> Örnek klasör: `docs/screenshots/`
+> Add your screenshots to this section.  
+> Example folder: `docs/screenshots/`
 
 ### Login
 ![Login Screen](docs/screenshots/login.png)
@@ -89,63 +89,63 @@ lib/
 ### Emergency Alert
 ![Emergency Alert Screen](docs/screenshots/emergency-alert.png)
 
-## Kurulum
+## Setup
 
-### 1) Gereksinimler
+### 1) Requirements
 
-- Flutter SDK (önerilen: stable)
-- Dart SDK (Flutter ile birlikte gelir)
-- Android Studio veya VS Code
-- Firebase projesi
+- Flutter SDK (recommended: stable)
+- Dart SDK (bundled with Flutter)
+- Android Studio or VS Code
+- Firebase project
 - Google Maps API key
 
-### 2) Projeyi indir
+### 2) Clone the project
 
 ```bash
 git clone <repo-url>
 cd Smart-Campus-Health-and-Safety-Notification-App
 ```
 
-### 3) Bağımlılıkları yükle
+### 3) Install dependencies
 
 ```bash
 flutter pub get
 ```
 
-### 4) Firebase kurulumu
+### 4) Firebase setup
 
-Bu projede Firebase kullanılmaktadır. Kendi Firebase projenle şu adımları uygula:
+This project uses Firebase. With your own Firebase project, follow these steps:
 
-1. Firebase Console'da Android/iOS uygulamalarını ekle.
-2. `flutterfire configure` komutunu çalıştır.
-3. Oluşan `firebase_options.dart` dosyasını `lib/` altına ekle.
-4. Firestore ve Authentication servislerini aktif et.
+1. Add Android/iOS apps in the Firebase Console.
+2. Run `flutterfire configure`.
+3. Place the generated `firebase_options.dart` file under `lib/`.
+4. Enable Firestore and Authentication services.
 
-### 5) Google Maps kurulumu
+### 5) Google Maps setup
 
-- Android için `android/app/src/main/AndroidManifest.xml` içine API key ekle.
-- iOS için `ios/Runner/AppDelegate.swift` veya ilgili konfigürasyona API key ekle.
+- For Android, add your API key in `android/app/src/main/AndroidManifest.xml`.
+- For iOS, add your API key in `ios/Runner/AppDelegate.swift` or the relevant configuration.
 
-### 6) Uygulamayı çalıştır
+### 6) Run the app
 
 ```bash
 flutter run
 ```
 
-## Örnek Kullanım Akışı
+## Example Usage Flow
 
-1. Kullanıcı giriş yapar veya kayıt olur.
-2. Ana sayfada mevcut bildirimleri görür, arama/filtre yapar.
-3. Yeni bir olay için bildirim oluşturur ve konum seçer.
-4. Bildirimi takip ederek durum güncellemelerini izler.
-5. Admin rolündeki kullanıcılar panelden durum yönetimi yapar.
+1. The user signs in or registers.
+2. On the home screen, they view existing notifications and search/filter them.
+3. They create a notification for a new incident and select a location.
+4. They follow the notification to track status updates.
+5. Users with the admin role manage status from the admin panel.
 
-## Geliştirme Notları
+## Development Notes
 
-- Uygulama karanlık tema odaklı bir arayüz kullanır.
-- Veriler gerçek zamanlı olarak Firestore üzerinden dinlenir.
-- Rol bilgisi `users` koleksiyonundaki `role` alanına göre yönetilir.
+- The app uses a dark-theme-focused UI.
+- Data is listened to in real time via Firestore.
+- Role information is managed via the `role` field in the `users` collection.
 
-## Katkı
+## Contributing
 
-Geliştirme önerileri ve katkılar için pull request açabilir veya issue oluşturabilirsin.
+Open a pull request or create an issue for development suggestions and contributions.
