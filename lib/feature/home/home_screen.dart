@@ -42,27 +42,92 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadCurrentUserInfo() async {
-    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-    if (currentUserId == null) return;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
 
     try {
       final doc = await FirebaseFirestore.instance
           .collection('users')
-          .doc(currentUserId)
+          .doc(currentUser.uid)
           .get();
-      if (!mounted || !doc.exists || doc.data() == null) return;
+
+      // Eğer doküman yoksa, otomatik olarak oluştur
+      if (!mounted) return;
+
+      if (!doc.exists || doc.data() == null) {
+        // Kullanıcı dokümanı yok, oluştur
+        try {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .set({
+                'id': currentUser.uid,
+                'fullname': currentUser.displayName ?? 'Kullanıcı',
+                'email': currentUser.email ?? '',
+                'role': 'user',
+                'unit': null,
+                'notificationsEnabled': true,
+                'emailNotifications': true,
+                'pushNotifications': true,
+                'createdAt': FieldValue.serverTimestamp(),
+              });
+
+          // Tekrar oku
+          final newDoc = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .get();
+
+          if (!mounted || !newDoc.exists || newDoc.data() == null) {
+            setState(() {
+              _currentUserRole = UserRole.user;
+              _currentUserUnit = null;
+            });
+            return;
+          }
+
+          final data = newDoc.data()!;
+          final roleString = data['role'] as String? ?? 'user';
+          final unitString = data['unit'] as String?;
+          if (mounted) {
+            setState(() {
+              _currentUserRole = roleString == 'admin'
+                  ? UserRole.admin
+                  : UserRole.user;
+              _currentUserUnit = unitString;
+            });
+          }
+        } catch (e) {
+          // Doküman oluşturulamadı, varsayılan değerlerle devam et
+          if (mounted) {
+            setState(() {
+              _currentUserRole = UserRole.user;
+              _currentUserUnit = null;
+            });
+          }
+        }
+        return;
+      }
 
       final data = doc.data()!;
       final roleString = data['role'] as String? ?? 'user';
       final unitString = data['unit'] as String?;
-      setState(() {
-        _currentUserRole = roleString == 'admin'
-            ? UserRole.admin
-            : UserRole.user;
-        _currentUserUnit = unitString;
-      });
+      if (mounted) {
+        setState(() {
+          _currentUserRole = roleString == 'admin'
+              ? UserRole.admin
+              : UserRole.user;
+          _currentUserUnit = unitString;
+        });
+      }
     } catch (_) {
       // Hata durumunda User olarak devam et
+      if (mounted) {
+        setState(() {
+          _currentUserRole = UserRole.user;
+          _currentUserUnit = null;
+        });
+      }
     }
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:mobil_proje/product/enum/error_strings.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:logger/logger.dart';
 
 var createAccountProvider =
     StateNotifierProvider<CreateAccountProvider, CreateAccountState>(
@@ -16,6 +17,7 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final Logger _logger = Logger();
 
   CreateAccountProvider()
     : super(
@@ -85,15 +87,42 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
         password: state.password!,
       );
       if (user.user != null) {
-        await _createUserDocument(
-          user.user!,
-          fullName: state.fullName ?? fullNameController.text.trim(),
-          email: state.email!,
-        );
-        changeStateErrorMessage(ErrorStringsEnum.createAccountSuccess.value);
-        changeStateIsLoading(false);
-        clearFullNameAndEmailAndPassword();
-        return true;
+        try {
+          await _createUserDocument(
+            user.user!,
+            fullName: state.fullName ?? fullNameController.text.trim(),
+            email: state.email!,
+          );
+          changeStateErrorMessage(ErrorStringsEnum.createAccountSuccess.value);
+          changeStateIsLoading(false);
+          clearFullNameAndEmailAndPassword();
+          return true;
+        } on FirebaseException catch (e) {
+          _logger.e(
+            'Firestore kullanıcı dokümanı oluşturma hatası',
+            error: e,
+            stackTrace: StackTrace.current,
+          );
+          // Firestore hatası - kullanıcıya bilgi ver
+          changeStateErrorMessage(
+            'Hesap oluşturuldu ancak kullanıcı bilgileri kaydedilemedi. Lütfen tekrar deneyin.',
+          );
+          changeStateIsLoading(false);
+          // Kullanıcı oluşturuldu ama doküman oluşturulamadı
+          // Kullanıcıyı giriş yapmış olarak kabul edebiliriz, doküman sonra oluşturulabilir
+          return true;
+        } catch (e) {
+          _logger.e(
+            'Beklenmeyen Firestore hatası',
+            error: e,
+            stackTrace: StackTrace.current,
+          );
+          changeStateErrorMessage(
+            'Hesap oluşturuldu ancak kullanıcı bilgileri kaydedilemedi. Lütfen tekrar deneyin.',
+          );
+          changeStateIsLoading(false);
+          return true;
+        }
       } else {
         changeStateErrorMessage(ErrorStringsEnum.createAccountFailed.value);
         changeStateIsLoading(false);
@@ -101,6 +130,11 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
       }
     } on FirebaseAuthException catch (e) {
       changeStateIsLoading(false);
+      _logger.e(
+        'Firebase Auth hatası',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
       switch (e.code) {
         case 'invalid-email':
           changeStateErrorMessage(ErrorStringsEnum.invalidEmailError.value);
@@ -119,12 +153,21 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
           );
           break;
         default:
-          changeStateErrorMessage(ErrorStringsEnum.unexpectedError.value);
+          changeStateErrorMessage(
+            '${ErrorStringsEnum.unexpectedError.value}: ${e.message ?? e.code}',
+          );
       }
       return false;
-    } catch (e) {
+    } catch (e, stackTrace) {
       changeStateIsLoading(false);
-      changeStateErrorMessage(ErrorStringsEnum.unexpectedError.value);
+      _logger.e(
+        'Beklenmeyen hesap oluşturma hatası',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      changeStateErrorMessage(
+        '${ErrorStringsEnum.unexpectedError.value}: ${e.toString()}',
+      );
       return false;
     } finally {
       changeStateIsLoading(false);
@@ -161,26 +204,60 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
           .signInWithCredential(credential);
 
       if (userCredential.user != null) {
-        await _createUserDocument(
-          userCredential.user!,
-          fullName: userCredential.user!.displayName,
-          email: userCredential.user!.email,
-        );
-        changeStateErrorMessage(ErrorStringsEnum.loginSuccess.value);
-        changeStateIsLoading(false);
-        return true;
+        try {
+          await _createUserDocument(
+            userCredential.user!,
+            fullName: userCredential.user!.displayName,
+            email: userCredential.user!.email,
+          );
+          changeStateErrorMessage(ErrorStringsEnum.loginSuccess.value);
+          changeStateIsLoading(false);
+          return true;
+        } on FirebaseException catch (e) {
+          _logger.e(
+            'Google hesabı ile Firestore dokümanı oluşturma hatası',
+            error: e,
+            stackTrace: StackTrace.current,
+          );
+          // Firestore hatası olsa bile kullanıcı giriş yaptı, doküman sonra oluşturulabilir
+          changeStateErrorMessage(ErrorStringsEnum.loginSuccess.value);
+          changeStateIsLoading(false);
+          return true;
+        } catch (e) {
+          _logger.e(
+            'Beklenmeyen Google Firestore hatası',
+            error: e,
+            stackTrace: StackTrace.current,
+          );
+          // Firestore hatası olsa bile kullanıcı giriş yaptı
+          changeStateErrorMessage(ErrorStringsEnum.loginSuccess.value);
+          changeStateIsLoading(false);
+          return true;
+        }
       } else {
         changeStateErrorMessage(ErrorStringsEnum.loginFailed.value);
         changeStateIsLoading(false);
         return false;
       }
-    } on FirebaseAuthException catch (_) {
+    } on FirebaseAuthException catch (e) {
       changeStateIsLoading(false);
+      _logger.e(
+        'Google Firebase Auth hatası',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
       changeStateErrorMessage(ErrorStringsEnum.invalidCredentialError.value);
       return false;
-    } catch (_) {
+    } catch (e, stackTrace) {
       changeStateIsLoading(false);
-      changeStateErrorMessage(ErrorStringsEnum.unexpectedError.value);
+      _logger.e(
+        'Google hesap oluşturma hatası',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      changeStateErrorMessage(
+        '${ErrorStringsEnum.unexpectedError.value}: ${e.toString()}',
+      );
       return false;
     } finally {
       changeStateIsLoading(false);
@@ -229,34 +306,46 @@ class CreateAccountProvider extends StateNotifier<CreateAccountState> {
     String? fullName,
     String? email,
   }) async {
-    final userDoc = FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid);
-    final docSnapshot = await userDoc.get();
-    final resolvedName = (fullName?.trim().isNotEmpty ?? false)
-        ? fullName!.trim()
-        : 'Kullanıcı';
-    final resolvedEmail = email ?? user.email ?? '';
+    try {
+      final userDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid);
+      final docSnapshot = await userDoc.get();
+      final resolvedName = (fullName?.trim().isNotEmpty ?? false)
+          ? fullName!.trim()
+          : 'Kullanıcı';
+      final resolvedEmail = email ?? user.email ?? '';
 
-    if (docSnapshot.exists) {
-      // Sadece eksik alanları tamamla
-      await userDoc.set({
-        'fullname': resolvedName,
-        'email': resolvedEmail,
-        'role': docSnapshot.data()?['role'] ?? 'user',
-      }, SetOptions(merge: true));
-    } else {
-      await userDoc.set({
-        'id': user.uid,
-        'fullname': resolvedName,
-        'email': resolvedEmail,
-        'role': 'user',
-        'unit': null,
-        'notificationsEnabled': true,
-        'emailNotifications': true,
-        'pushNotifications': true,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      if (docSnapshot.exists) {
+        // Sadece eksik alanları tamamla
+        await userDoc.set({
+          'fullname': resolvedName,
+          'email': resolvedEmail,
+          'role': docSnapshot.data()?['role'] ?? 'user',
+        }, SetOptions(merge: true));
+      } else {
+        await userDoc.set({
+          'id': user.uid,
+          'fullname': resolvedName,
+          'email': resolvedEmail,
+          'role': 'user',
+          'unit': null,
+          'notificationsEnabled': true,
+          'emailNotifications': true,
+          'pushNotifications': true,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } on FirebaseException catch (e) {
+      _logger.e('Firestore hatası', error: e, stackTrace: StackTrace.current);
+      rethrow;
+    } catch (e, stackTrace) {
+      _logger.e(
+        'Kullanıcı dokümanı oluşturma hatası',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
     }
   }
 }
